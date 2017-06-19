@@ -103,25 +103,3 @@ api.add_resource(Pokemon, '/pokemon')
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-
-    # def GridSearchSVM():
-    #     # define all parameters to test the SVM (different kernel and C)
-    #     param_grid = [
-    #         # {'C': [1, 10, 100, 1000], 'kernel': ['linear']},
-    #         {'C': [1, 2, 3, 4, 5, 10, 50, 100, 500, 1000], 'kernel': ['rbf']},
-    #     ]
-    #
-    #     svc = svm.SVC()
-    #     clf = GridSearchCV(estimator=svc, param_grid=param_grid, n_jobs=-1)
-    #     clf.fit(x_data_filtered, y_data_filtered)
-    #     print(clf.best_params_)
-    #     print(clf.best_score_)
-    #     means = clf.cv_results_['mean_test_score']
-    #     stds = clf.cv_results_['std_test_score']
-    #     print(means)
-    #     print(stds)
-    #
-    #     # clf = svm.SVC(kernel='rbf', C=2)
-    #     scores = cross_val_score(clf, x_data_filtered, y_data_filtered)
-    #     print("Accuracy: %f (+/- %f)" % (scores.mean(), scores.std() * 2))
