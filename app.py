@@ -1,9 +1,7 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, render_template
 from flask_restful import Resource, Api, reqparse
 import pickle
 from sklearn import svm
-import numpy as np
-import sklearn
 from sklearn.naive_bayes import GaussianNB
 from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier
@@ -34,11 +32,11 @@ class UseScikit(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument('Clf', type=str, required=True, location='json', help='classifier not blank ! ')
         parser.add_argument('ParamsClf', type=dict, required=False, location='json', help='Value of params !')
-        parser.add_argument('GridSearch', type=bool, required=True, location='json', help="Gridsearch not defined !")
+        parser.add_argument('GridSearch', type=int, required=True, location='json', help='Gridsearch not defined !')
         parser.add_argument('ParamsGrid', type=dict, required=False, location='json', help='Value of params !')
-        parser.add_argument('Result', type=str, required=True, location="json", help="not evaluator defined !")
+        parser.add_argument('Result', type=str, required=True, location='json', help='not evaluator defined !')
 
-        args = parser.parse_args(strict=True)
+        args = parser.parse_args()
 
         dictClassificator = {
             'SVM': svm.SVC(),
@@ -52,8 +50,9 @@ class UseScikit(Resource):
             clf = dictClassificator[args['Clf']]
 
             # check if he want a gridsearch
-            if args['GridSearch']:
+            if args['GridSearch'] == 1:
 
+                args['ParamsGrid'] = {"C": [1, 10, 100, 1000], "kernel": ["rbf"]}
                 grid = GridSearchCV(estimator=clf, param_grid=[args['ParamsGrid']], n_jobs=-1)
                 grid.fit(x_data_filtered, y_data_filtered)
 
@@ -74,7 +73,6 @@ class UseScikit(Resource):
                 args['Result'] = ("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
 
         except Exception as e:
-            print(type(args['GridSearch']))
             template = "An exception of type {0} occurred. Arguments:\n{1!r}"
             message = template.format(type(e).__name__, e.args)
 
@@ -98,10 +96,16 @@ class UseScikit(Resource):
         # curl -i -H "Content-Type: application/json" -X POST -d '{"Clf":"RandomForestClassifier","Params":{"n_estimators":10},"Result":"None"}' http://localhost:5000/pokemon
 
         # check gridsearch svm
-        # curl -i -H "Content-Type: application/json" -X POST -d '{"Clf":"SVM","GridSearch":"True", "ParamsGrid":[{"C": [1, 10, 100, 1000], "kernel": ["rbf"]}],"Result":"None"}' http://localhost:5000/pokemon
+        # curl -i -H "Content-Type: application/json" -X POST -d '{"Clf":"SVM","GridSearch":"True", "ParamsGrid":[{"C": [1, 10, 100, 1000], "kernel": ["rbf"]}],"Result":"None"}' http://localhost:5000/index
 
 
-api.add_resource(UseScikit, '/pokemon')
+api.add_resource(UseScikit, '/index')
+
+
+@app.route('/')
+def hello_world():
+    return render_template('tutoAjaxJquery.html')
+
 
 if __name__ == '__main__':
     app.run(debug=True)
