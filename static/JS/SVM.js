@@ -6,6 +6,7 @@ function SVM(c, gamma, kernel) {
 	this.kernel = kernel;
 	this.c = c;
 	this.gamma = gamma;
+	this.clfName = "SVM";
 	this.setup();
 }
 var p = createjs.extend(SVM, createjs.Container);
@@ -16,7 +17,7 @@ p.getData = function () {
 }
 
 p.setup = function() {
-	var text = new createjs.Text("SVM", "20px Arial", "#000");
+	var text = new createjs.Text(this.clfName, "20px Arial", "#000");
     text.y = -7;
 	text.textAlign = "center";
 
@@ -39,7 +40,7 @@ p.setup = function() {
 } ;
 
 p.handleClick = function (event) {
-	alert("You clicked on a button: SVM ");
+	alert("You clicked on a button:" + this.clfName);
 } ;
 
 p.handleRollOver = function(event) {

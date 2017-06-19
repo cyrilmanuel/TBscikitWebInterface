@@ -7,7 +7,7 @@
 
 class DataToJson {
     constructor() {
-        this._Clf = "SVM";
+        this._Clf = "";
         this._ParamsClf = {};
         this._GridSearch = 1;
         this._ParamsGrid = [{"C": [1, 10, 100, 1000], "kernel": ["rbf"]}];

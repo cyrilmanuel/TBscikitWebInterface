@@ -104,7 +104,7 @@ api.add_resource(UseScikit, '/index')
 
 @app.route('/')
 def hello_world():
-    return render_template('TestCreateJS.html')
+    return render_template('tutoAjaxJquery.html')
 
 
 if __name__ == '__main__':
