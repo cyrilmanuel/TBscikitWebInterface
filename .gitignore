@@ -151,3 +151,6 @@ crashlytics-build.properties
 fabric.properties
 
 DataSet/
+
+# ignore components
+static/bower_components
