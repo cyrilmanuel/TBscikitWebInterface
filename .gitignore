@@ -153,4 +153,5 @@ fabric.properties
 DataSet/
 
 # ignore components
-static/bower_components/*
+static/bower_components/
+node_modules/
