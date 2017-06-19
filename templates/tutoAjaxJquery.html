@@ -3,6 +3,8 @@
 <head>
     <title>jQuery AJAX POST Form</title>
     <meta charset="utf-8">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="{{url_for('static', filename='JS/DataToJson.js')}}"></script>
 </head>
 <body>
 
@@ -11,35 +13,54 @@
 </div>
 
 <form id="my-form">
-    <input type="text" id="first-name" name="first-name" placeholder="First Name" />
-    <input type="text" id="last-name" name="last-name" placeholder="Last Name" />
-
+    <input type="text" id="Clf" name="Clf" placeholder="classifier : SVM ... "/>
+    <input type="number" name="last-name" placeholder="Last Name"/>
+    <input type="checkbox" name="IsGridSearch" value="1"> Want an GridSearch ?
+    <input type="number">
     <button type="submit">Submit</button>
 </form>
 
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+
 <script>
-    (function($){
-        function processForm( e ){
+    var DataSend = new DataToJson();
+
+    (function ($) {
+        function processForm(e) {
             $.ajax({
                 url: 'index',
                 dataType: 'text',
                 type: 'post',
                 contentType: 'application/json',
-                data: JSON.stringify({"Clf":"SVM","GridSearch":1, "ParamsGrid":[{"C": [1, 10, 100, 1000], "kernel": ["rbf"]}],"Result":"None"}),
-                success: function( data, textStatus, jQxhr ){
-                    $('#response pre').html( data );
+                data: DataSend.getJsonifyData(),
+                success: function (dataReceive, textStatus, jQxhr) {
+
+                    $('#response pre').html(dataReceive);
+                    DataSend.setResponseToObject(dataReceive);
                 },
-                error: function( jqXhr, textStatus, errorThrown ){
-                    console.log( errorThrown );
+                error: function (jqXhr, textStatus, errorThrown) {
+                    console.log(errorThrown);
                 }
             });
 
             e.preventDefault();
         }
 
-        $('#my-form').submit( processForm );
+        $('#my-form').submit(processForm);
     })(jQuery);
+</script>
+
+<script>
+    function generateJsonModel() {
+        var clf = $("#clf").val();
+        var isGridsearch = $("#isGridsearch").val();
+        var phone = $("#id-manuf-phone").val();
+
+        var sendInfo = {
+            Clf: clf,
+            GridSearch: isGridsearch,
+            Phone: phone
+        };
+    };
 </script>
 </body>
 </html>
