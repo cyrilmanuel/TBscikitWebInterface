@@ -1,5 +1,0 @@
-{
-  "plugins": ["transform-strict-mode", "transform-es2015-modules-commonjs"],
-  "auxiliaryCommentBefore": "before",
-  "auxiliaryCommentAfter": "after"
-}
