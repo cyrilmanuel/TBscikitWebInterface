@@ -11,13 +11,13 @@ class ButtonList extends React.Component {
         let rows = items.map(
             item => {
                 return (
-                    <li className="collection-item" onClick={this.onClick} id={item}
-                        key={item}>{item}</li>
+                    <a className="collection-item" onClick={this.onClick} id={item}
+                        key={item}>{item}</a>
                 );
             }
         );
         return (
-            <ul className="collection">{rows}</ul>
+            <div className="collection">{rows}</div>
         );
     }
 }
