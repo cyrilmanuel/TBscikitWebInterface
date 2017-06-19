@@ -28,7 +28,7 @@
             <button type="submit">Submit</button>
         </form>
         <div id="response">
-            <pre></pre>
+
         </div>
     </div>
     <div class="col s2">
@@ -37,23 +37,29 @@
     </div>
 </div>
 <script>
+    // create tab container of shape
+    var listShapeOnCanvas = [];
+    // create tab contain all name of classifier
+    var listOfAllNameClassifier = [];
+    // dictionnary contain return request get (all classifier and params)
+    var dictAllClassificator = {};
 
+    // fonction contain all classifier and params
+    window.getData = function () {
+        return dictAllClassificator;
+    };
 
-
+    // --------------------------------- initialisation of the canvas --------------
     function init() {
-         var listShapeOnCanvas = [];
-
+        // -------------------------- request Get in ajax ------------
         $.getJSON("backend", function success(data) {
-                window.getData = function () {
+                dictAllClassificator = data;
 
-                   console.log(data['SVC']);
-                    return data;
-                };
-                var f = [];
                 for (var key in data) {
-                    f.push(key);
+                    listOfAllNameClassifier.push(key);
                 }
-                shareRenderButtonList(f);
+                // generate button list with all name classifier
+                shareRenderButtonList(listOfAllNameClassifier);
             }
         );
 
@@ -64,36 +70,37 @@
             stage.update();
         };
 
-        // ------------------------- func global add shape to stage ---------------------
-        window.addShape = function (shape) {
-            stage.addChild(shape);
-            listShapeOnCanvas.push(shape);
+        // ------------------------- func global for add shape to stage ---------------------
+        window.addShape = function (name) {
+            var temp = new ShapeGenerator(name);
+            stage.addChild(temp);
+            listShapeOnCanvas.push(temp);
         };
 
         // -------------------------- return request --------------
-         window.getDFS = function () {
-           var res = {};
-           for(var indexShape in listShapeOnCanvas){
-               res[indexShape] = listShapeOnCanvas[indexShape].getDataDict();
-           }
-           return res;
+        window.getDFS = function () {
+            var res = {};
+
+            //parcour all shape on canvas and return a dict
+            // like this {id : {name : {params classifier}} }
+            for (var indexShape in listShapeOnCanvas) {
+                res[indexShape] = listShapeOnCanvas[indexShape].getDataDict();
+            }
+            return res;
         };
 
-    };
-
-
-    // -------------------------------- func generate shape and call addShape with him -------
-    window.clictodraw = function (name) {
-        var fu = new ShapeGenerator(name);
-        window.addShape(fu);
-
+        window.removeShape = function (idShape) {
+            // TODO remove the shape by id
+        }
     };
 
     // -------------------------------- send data to backend in ajax -------------------------
-     (function ($) {
+    (function ($) {
         function processForm(e) {
+            // recup all value to push on backend
             var dataToSend = window.getDFS();
-            console.log(dataToSend);
+
+            // ajax POST
             $.ajax({
                 url: 'backend',
                 dataType: 'text',
@@ -102,8 +109,7 @@
                 data: JSON.stringify(dataToSend),
                 //data: JSON.stringify({"SVC": {"C": 1.0, "kernel": "rbf", "cache_size": 200, "tol": 0.001, "max_iter": -1, "class_weight": null, "shrinking": true, "degree": 3, "random_state": null, "coef0": 0.0, "decision_function_shape": null, "gamma": "auto", "probability": false, "verbose": false}}),
                 success: function (dataReceive, textStatus, jQxhr) {
-
-                    $('#response pre').html(dataReceive);
+                    window.shareRenderResult(JSON.parse(dataReceive));
                 },
                 error: function (jqXhr, textStatus, errorThrown) {
                     console.log(errorThrown);
@@ -112,7 +118,6 @@
 
             e.preventDefault();
         }
-
         $('#my-form').submit(processForm);
     })(jQuery);
 

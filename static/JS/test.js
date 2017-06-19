@@ -3,7 +3,7 @@
  */
 class ButtonList extends React.Component {
     onClick(event) {
-        clictodraw(event.target.id);
+        window.addShape(event.target.id);
     }
 
     render() {
@@ -50,7 +50,8 @@ class FormShape extends React.Component {
             <div>{label}</div>
         );
     }
-};
+}
+;
 
 
 //------------------------------------- LabelForm ---------------------------------------
@@ -58,12 +59,13 @@ class LabelForForm extends React.Component {
     render() {
         return (
             <div>
-            <label for={this.props.forLabel}>{this.props.nameLabel}</label>
-            {this.props.children}
+                <label for={this.props.forLabel}>{this.props.nameLabel}</label>
+                {this.props.children}
             </div>
         );
     }
-};
+}
+;
 
 
 class inputForForm extends React.Component {
@@ -71,7 +73,7 @@ class inputForForm extends React.Component {
         let t = this.props.t;
         return (
             <LabelForForm nameLabel={"hello"}>
-                <div> parent </div>
+                <div> parent</div>
             </LabelForForm>
         );
     };
@@ -82,5 +84,32 @@ window.shareRenderFormShape = function (dictParamsClassifier) {
     ReactDOM.render(
         <FormShape dict={dictParamsClassifier}/>,
         document.getElementById('formClassificator')
+    );
+};
+
+
+// ------------------------ RENDER RETURN RESULT OF JSON -----------------------
+
+class ResultDiv extends React.Component {
+    render() {
+        let dict = this.props.dict || {}
+        let result = Object.keys(dict).map(name => {
+                return (
+                    <div>id of the shape = {name}  {dict[name]}
+                    </div>
+                );
+            }
+        );
+        return (
+            <div>{result}</div>
+        );
+    }
+}
+
+window.shareRenderResult = function (DictResultPost) {
+
+    ReactDOM.render(
+        <ResultDiv dict={DictResultPost}/>,
+        document.getElementById('response')
     );
 };

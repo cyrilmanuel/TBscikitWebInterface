@@ -1,38 +1,51 @@
 (function () {
 
+    // constructor shape
     function ShapeGenerator(name) {
         this.Container_constructor();
+        // stock the name of the classifier this shape will be repr
         this.name = name;
+        // stock the params of the classifier into the shape
+        // because this shape can call the function to render
+        // with React, a approprieted form
         this.dicParams = getData()[this.name];
+
+        // variable can toggle to know if user click the shape or move the shape.
         this.isStateClick = true;
         this.setup();
     }
+    // extend of container to create round shape with name inside
     var p = createjs.extend(ShapeGenerator, createjs.Container);
 
-
+    // setup the shape
     p.setup = function () {
         this.text = new createjs.Text(this.name, "20px Arial", "#000");
         this.text.y = -7;
         this.text.textAlign = "center";
 
         var background = new createjs.Shape();
-        background.graphics.beginFill("#c7f4b7").drawCircle(0, 0, 50);
+        var color = '#'+(0x1000000+(Math.random())*0xffffff).toString(16).substr(1,6);
+        background.graphics.beginFill(color).drawCircle(0, 0, 50);
         this.addChild(background, this.text);
 
+        // define function for interaction
         this.on("click", this.handleClick);
         this.on("rollover", this.handleRollOver);
         this.on("rollout", this.handleRollOver);
         this.on("pressup", this.handlePressUp);
         this.on("pressmove", this.handlePressMove);
 
+        // define the type of cursor
         this.cursor = "arrow";
+
 
         this.mouseChildren = false;
 
         this.offset = Math.random() * 10;
         this.count = 0;
 
-        this.x = this.y = 50;
+        //TODO center the shape on pop to the center of canvas
+        this.x = this.y = 200;
     };
 
     p.handleClick = function (event) {
@@ -56,10 +69,13 @@
         this.isStateClick = false;
     };
 
+    // return dict containe name of classifier and dict with params of classifier
+    // like this {name : {Params1:value1, Params2:value2}}
     p.getDataDict = function () {
         var temp = {};
         temp[this.name]=this.dicParams;
         return temp;
     }
+    // create window function. when, i can create shape in a script on the page index.html
     window.ShapeGenerator = createjs.promote(ShapeGenerator, "Container");
 }());
