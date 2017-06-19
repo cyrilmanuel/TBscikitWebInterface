@@ -35,6 +35,7 @@ class Pokemon(Resource):
         RecupClassificator = args['clf']
         RecupParamsClassificator = args['params']
         RecupIfCrossvalScore = args['crossval']
+
         # return the result
         return {'Result': 12}
 
@@ -43,3 +44,5 @@ api.add_resource(Pokemon, '/pokemon')
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+
