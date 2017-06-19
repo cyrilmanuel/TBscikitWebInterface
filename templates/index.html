@@ -23,21 +23,33 @@
         </div>
     </div>
     <div class="col s6">
-        <canvas id="demoCanvas"  width="600" height="1000"></canvas>
+        <canvas id="demoCanvas" width="600" height="400"></canvas>
+        <form id="my-form">
+            <button type="submit">Submit</button>
+        </form>
+        <div id="response">
+            <pre></pre>
+        </div>
     </div>
     <div class="col s2">
         <div id="formClassificator">
-            </div>
+        </div>
     </div>
 </div>
 <script>
 
+
+
     function init() {
+         var listShapeOnCanvas = [];
+
         $.getJSON("backend", function success(data) {
-            window.getData = function () {
-                return data;
-            };
-            var f = [];
+                window.getData = function () {
+
+                   console.log(data['SVC']);
+                    return data;
+                };
+                var f = [];
                 for (var key in data) {
                     f.push(key);
                 }
@@ -45,21 +57,64 @@
             }
         );
 
+        // --------------------------------- init canvas ---------------------
         var stage = new createjs.Stage("demoCanvas");
         createjs.Ticker.addEventListener("tick", handleTick);
         function handleTick(event) {
             stage.update();
         };
+
+        // ------------------------- func global add shape to stage ---------------------
         window.addShape = function (shape) {
             stage.addChild(shape);
-        }
+            listShapeOnCanvas.push(shape);
+        };
+
+        // -------------------------- return request --------------
+         window.getDFS = function () {
+           var res = {};
+           for(var indexShape in listShapeOnCanvas){
+               res[indexShape] = listShapeOnCanvas[indexShape].getDataDict();
+           }
+           return res;
+        };
+
     };
 
+
+    // -------------------------------- func generate shape and call addShape with him -------
     window.clictodraw = function (name) {
         var fu = new ShapeGenerator(name);
         window.addShape(fu);
 
-    }
+    };
+
+    // -------------------------------- send data to backend in ajax -------------------------
+     (function ($) {
+        function processForm(e) {
+            var dataToSend = window.getDFS();
+            console.log(dataToSend);
+            $.ajax({
+                url: 'backend',
+                dataType: 'text',
+                type: 'post',
+                contentType: 'application/json',
+                data: JSON.stringify(dataToSend),
+                //data: JSON.stringify({"SVC": {"C": 1.0, "kernel": "rbf", "cache_size": 200, "tol": 0.001, "max_iter": -1, "class_weight": null, "shrinking": true, "degree": 3, "random_state": null, "coef0": 0.0, "decision_function_shape": null, "gamma": "auto", "probability": false, "verbose": false}}),
+                success: function (dataReceive, textStatus, jQxhr) {
+
+                    $('#response pre').html(dataReceive);
+                },
+                error: function (jqXhr, textStatus, errorThrown) {
+                    console.log(errorThrown);
+                }
+            });
+
+            e.preventDefault();
+        }
+
+        $('#my-form').submit(processForm);
+    })(jQuery);
 
 </script>
 

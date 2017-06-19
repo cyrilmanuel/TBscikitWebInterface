@@ -34,9 +34,6 @@ window.shareRenderButtonList = function (tab) {
 class FormShape extends React.Component {
     render() {
         let dict = this.props.dict || {}
-        let valueParams = this.props.valueParam || []
-        let items = this.props.nameParam || []
-
         let label = Object.keys(dict).map(name => {
                 if (dict[name] == true) {
                     return (
@@ -53,19 +50,37 @@ class FormShape extends React.Component {
             <div>{label}</div>
         );
     }
+};
+
+
+//------------------------------------- LabelForm ---------------------------------------
+class LabelForForm extends React.Component {
+    render() {
+        return (
+            <div>
+            <label for={this.props.forLabel}>{this.props.nameLabel}</label>
+            {this.props.children}
+            </div>
+        );
+    }
+};
+
+
+class inputForForm extends React.Component {
+    render() {
+        let t = this.props.t;
+        return (
+            <LabelForForm nameLabel={"hello"}>
+                <div> parent </div>
+            </LabelForForm>
+        );
+    };
 }
 
+
 window.shareRenderFormShape = function (dictParamsClassifier) {
-
-    var nameParams = [];
-    var valueParams = [];
-    for (var key in dictParamsClassifier) {
-        nameParams.push(key);
-        valueParams.push(dictParamsClassifier[key]);
-    }
-
     ReactDOM.render(
-        <FormShape nameParam={nameParams} valueParam={valueParams} dict={dictParamsClassifier}/>,
+        <FormShape dict={dictParamsClassifier}/>,
         document.getElementById('formClassificator')
     );
 };

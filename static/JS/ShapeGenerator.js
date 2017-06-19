@@ -3,22 +3,21 @@
     function ShapeGenerator(name) {
         this.Container_constructor();
         this.name = name;
+        this.dicParams = getData()[this.name];
         this.isStateClick = true;
         this.setup();
     }
-
     var p = createjs.extend(ShapeGenerator, createjs.Container);
 
 
     p.setup = function () {
-        var text = new createjs.Text(this.name, "20px Arial", "#000");
-        text.y = -7;
-        text.textAlign = "center";
-
+        this.text = new createjs.Text(this.name, "20px Arial", "#000");
+        this.text.y = -7;
+        this.text.textAlign = "center";
 
         var background = new createjs.Shape();
         background.graphics.beginFill("#c7f4b7").drawCircle(0, 0, 50);
-        this.addChild(background, text);
+        this.addChild(background, this.text);
 
         this.on("click", this.handleClick);
         this.on("rollover", this.handleRollOver);
@@ -37,9 +36,8 @@
     };
 
     p.handleClick = function (event) {
-        //shareRenderFunc();
         if (this.isStateClick) {
-         shareRenderFormShape(getData()[this.name]);
+         shareRenderFormShape(this.dicParams);
         }
     };
 
@@ -58,6 +56,10 @@
         this.isStateClick = false;
     };
 
-
+    p.getDataDict = function () {
+        var temp = {};
+        temp[this.name]=this.dicParams;
+        return temp;
+    }
     window.ShapeGenerator = createjs.promote(ShapeGenerator, "Container");
 }());
