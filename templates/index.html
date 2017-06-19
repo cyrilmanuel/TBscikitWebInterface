@@ -9,7 +9,7 @@
     <script src="https://fb.me/react-dom-15.0.1.js"></script>
     <script src="https://code.createjs.com/createjs-2015.11.26.min.js"></script>
     <script type="text/babel" src="{{url_for('static', filename='JS/test.js')}}"></script>
-    <script src="{{url_for('static', filename='JS/SVM.js')}}"></script>
+    <script src="{{url_for('static', filename='JS/ShapeGenerator.js')}}"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.2/css/materialize.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.2/js/materialize.min.js"></script>
 </head>
@@ -23,26 +23,25 @@
         </div>
     </div>
     <div class="col s6">
-        <div class="row">
-            <div class="col s12">
-                <canvas id="demoCanvas" width="500" height="300"></canvas>
-            </div>
-        </div>
+        <canvas id="demoCanvas"  width="600" height="1000"></canvas>
     </div>
-
-
-    <div class="col s2">This div is 2-columns wide</div>
+    <div class="col s2">
+        <div id="formClassificator">
+            </div>
+    </div>
 </div>
-
 <script>
 
     function init() {
         $.getJSON("backend", function success(data) {
-                var f = [];
+            window.getData = function () {
+                return data;
+            };
+            var f = [];
                 for (var key in data) {
                     f.push(key);
                 }
-                shareRenderFunc5(f);
+                shareRenderButtonList(f);
             }
         );
 
@@ -57,10 +56,12 @@
     };
 
     window.clictodraw = function (name) {
-        var fu = new SVM(name,"#F00",3,2);
+        var fu = new ShapeGenerator(name);
         window.addShape(fu);
 
     }
+
 </script>
+
 </body>
 </html>
