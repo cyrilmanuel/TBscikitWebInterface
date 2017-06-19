@@ -1,3 +1,5 @@
+
+
 (function() {
 
 function SVM(c, gamma, kernel) {
@@ -40,6 +42,7 @@ p.setup = function() {
 } ;
 
 p.handleClick = function (event) {
+	shareRenderFunc();
 	alert("You clicked on a button:" + this.clfName);
 } ;
 

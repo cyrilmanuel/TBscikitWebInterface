@@ -1,34 +1,61 @@
 from flask import Flask, jsonify, render_template
 from flask_restful import Resource, Api, reqparse
 import pickle
-from sklearn import svm
-from sklearn.naive_bayes import GaussianNB
-from sklearn.linear_model import LogisticRegression
-from sklearn.neural_network import MLPClassifier
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.utils.testing import all_estimators
 from sklearn.model_selection import cross_val_score, GridSearchCV
+from importlib import import_module
 
 app = Flask(__name__)
 api = Api(app)
 
+with open('./DataSet/x_data_filtered.pickle', 'rb') as f:
+    x_data_filtered = pickle.load(f)
+
+with open('./DataSet/y_data_filtered.pickle', 'rb') as f:
+    y_data_filtered = pickle.load(f)
+
+# create liste with estimator and the params
+# dictEstimator is to stock object class and name objet
+dictEstimator = {}
+
+# to store params estimator and name
+dictParamEstimator = {}
+
+# list object receive by post
 listProcess = [
 ]
+
+for name, class_ in all_estimators():
+
+    # prin if is a classifier, a regression or none
+    # print(getattr(class_, "_estimator_type", None))
+
+    if "_" not in name and str(getattr(class_, "_estimator_type", None)) == "classifier":
+        modulePath = str(class_).split("'")[1]
+        if name in modulePath:
+            # remove name on module import
+            dictEstimator[name] = getattr(import_module(modulePath.replace("." + name, '')), name)
+        else:
+            dictEstimator[name] = getattr(import_module(modulePath), name)
+
+        # stock get params
+        dictParamEstimator[name] = dictEstimator[name]().get_params(False)
+
+
+class GetScikitInformation(Resource):
+    def get(self):
+        return jsonify(dictParamEstimator)
+
+    def post(self):
 
 
 class UseScikit(Resource):
     def get(self):
-        return jsonify({'listProcess': listProcess})
+        return jsonify(dictParamEstimator)
 
     def post(self):
 
         listProcess.clear()
-
-        with open('./DataSet/x_data_filtered.pickle', 'rb') as f:
-            x_data_filtered = pickle.load(f)
-
-        with open('./DataSet/y_data_filtered.pickle', 'rb') as f:
-            y_data_filtered = pickle.load(f)
-
         parser = reqparse.RequestParser()
         parser.add_argument('Clf', type=str, required=True, location='json', help='classifier not blank ! ')
         parser.add_argument('ParamsClf', type=dict, required=False, location='json', help='Value of params !')
@@ -99,11 +126,20 @@ class UseScikit(Resource):
         # curl -i -H "Content-Type: application/json" -X POST -d '{"Clf":"SVM","GridSearch":"True", "ParamsGrid":[{"C": [1, 10, 100, 1000], "kernel": ["rbf"]}],"Result":"None"}' http://localhost:5000/index
 
 
+# route to process Scikit-learn
 api.add_resource(UseScikit, '/index')
+
+# route to get information Scikit-learn ( classificator and params)
+api.add_resource(GetScikitInformation, '/ScikitInfo')
 
 
 @app.route('/')
 def hello_world():
+    return render_template('testReactJS.html')
+
+
+@app.route('/nice')
+def hello_world2():
     return render_template('tutoAjaxJquery.html')
 
 
