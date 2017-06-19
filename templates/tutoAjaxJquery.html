@@ -13,10 +13,6 @@
 </div>
 
 <form id="my-form">
-    <input type="text" id="Clf" name="Clf" placeholder="classifier : SVM ... "/>
-    <input type="number" name="last-name" placeholder="Last Name"/>
-    <input type="checkbox" name="IsGridSearch" value="1"> Want an GridSearch ?
-    <input type="number">
     <button type="submit">Submit</button>
 </form>
 
@@ -47,20 +43,6 @@
 
         $('#my-form').submit(processForm);
     })(jQuery);
-</script>
-
-<script>
-    function generateJsonModel() {
-        var clf = $("#clf").val();
-        var isGridsearch = $("#isGridsearch").val();
-        var phone = $("#id-manuf-phone").val();
-
-        var sendInfo = {
-            Clf: clf,
-            GridSearch: isGridsearch,
-            Phone: phone
-        };
-    };
 </script>
 </body>
 </html>

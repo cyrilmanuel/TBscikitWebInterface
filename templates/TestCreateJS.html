@@ -2,9 +2,30 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <script src="https://code.createjs.com/createjs-2015.11.26.min.js"></script>
+    <script src="{{url_for('static', filename='JS/DataToJson.js')}}"></script>
+    <script src="{{url_for('static', filename='JS/SVM.js')}}"></script>
+    <title>testJs</title>
 </head>
-<body>
-
+<body onload="init();">
+<canvas id="demoCanvas" width="500" height="300"></canvas>
 </body>
 </html>
+
+<script>
+
+    function init() {
+        var stage = new createjs.Stage("demoCanvas");
+        var f = new SVM("salut","#F00",3,2);
+
+        stage.addChild(f);
+        createjs.Ticker.addEventListener("tick", handleTick);
+        function handleTick(event) {
+            stage.update();
+        }
+
+    }
+    ;
+
+    // command shift r = reload chrome withou the cache
+</script>
