@@ -25,7 +25,7 @@ class ButtonList extends React.Component {
 window.shareRenderButtonList = function (tab) {
     ReactDOM.render(
         <ButtonList items={tab}/>,
-        document.getElementById('app')
+        document.getElementById('classifier')
     );
 };
 
