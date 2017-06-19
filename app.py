@@ -13,17 +13,17 @@ from sklearn.model_selection import cross_val_score, GridSearchCV
 app = Flask(__name__)
 api = Api(app)
 
-pokedex = [  # {'Clf': 'SVM', 'Params': {'C': 3}, 'Result': "None"}
+listProcess = [
 ]
 
 
-class Pokemon(Resource):
+class UseScikit(Resource):
     def get(self):
-        return jsonify({'pokedex': pokedex})
+        return jsonify({'listProcess': listProcess})
 
     def post(self):
 
-        pokedex.clear()
+        listProcess.clear()
 
         with open('./DataSet/x_data_filtered.pickle', 'rb') as f:
             x_data_filtered = pickle.load(f)
@@ -59,7 +59,7 @@ class Pokemon(Resource):
 
                 resultParams = ""
                 for key, value in grid.best_params_.items():
-                    resultParams+="param : {0}  value : {1} \n".format(key,value)
+                    resultParams += "param : {0}  value : {1} \n ".format(key, value)
 
                 args['Result'] = (
                     "Accuracy: {0}  \n ".format(grid.best_score_) + resultParams)
@@ -85,8 +85,9 @@ class Pokemon(Resource):
         # return classificatior object in json
         classificator = {'Clf': args['Clf'], 'ParamsClf': args['ParamsClf'], 'GridSearch': args['GridSearch'],
                          'Result': args['Result']}
-        pokedex.append(classificator)
-        return jsonify({'pokedex': pokedex})
+        listProcess.append(classificator)
+
+        return jsonify({'listProcess': listProcess})
 
         # CHECK POST
 
@@ -99,7 +100,8 @@ class Pokemon(Resource):
         # check gridsearch svm
         # curl -i -H "Content-Type: application/json" -X POST -d '{"Clf":"SVM","GridSearch":"True", "ParamsGrid":[{"C": [1, 10, 100, 1000], "kernel": ["rbf"]}],"Result":"None"}' http://localhost:5000/pokemon
 
-api.add_resource(Pokemon, '/pokemon')
+
+api.add_resource(UseScikit, '/pokemon')
 
 if __name__ == '__main__':
     app.run(debug=True)
