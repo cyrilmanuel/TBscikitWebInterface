@@ -1,19 +1,32 @@
 /**
  * Created by cyriljeanneret on 14.06.17.
  */
-class Greeting extends React.Component {
-    render() {
-        return <h1>Hello</h1>;
+class ButtonList extends React.Component {
+    onClick(event) {
+        clictodraw(event.target.id);
     }
 
-    unmount() {
-        ReactDOM.unmountComponentAtNode();
+    render() {
+        let items = this.props.items || []
+        let rows = items.map(
+            item => {
+                return (
+                    <button className="btn waves-effect waves-light" onClick={this.onClick} id={item}
+                            key={item}>{item}</button>
+                );
+            }
+        );
+
+        return (
+            <div className="col s12">{rows}</div>
+        );
     }
 }
 
-window.shareRenderFunc = function () {
-    ReactDOM.render(<Greeting />, document.getElementById('app'));
-};
-window.shareRenderFunc2 = function () {
-    ReactDOM.render(<div></div>, document.getElementById('app'));
+window
+    .shareRenderFunc5 = function (tab) {
+    ReactDOM.render(
+        <ButtonList items={tab}/>,
+        document.getElementById('app')
+    );
 };
