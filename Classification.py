@@ -25,6 +25,8 @@ class WrapperScikit:
         with open('../DataSet/y_data_filtered.pickle', 'rb') as f:
             self.y_data_filtered = pickle.load(f)
 
+
+
     def createCLF(self):
         self.recupCLF
 

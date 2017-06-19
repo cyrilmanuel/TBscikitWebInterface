@@ -1,44 +1,103 @@
-from flask import Flask
+from flask import Flask, jsonify
 from flask_restful import Resource, Api, reqparse
+import pickle
+from sklearn import svm
+import numpy as np
+import sklearn
+from sklearn.naive_bayes import GaussianNB
+from sklearn.linear_model import LogisticRegression
+from sklearn.neural_network import MLPClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import cross_val_score, GridSearchCV
 
 app = Flask(__name__)
 api = Api(app)
 
-pokedex = [{'clf': 'SVM', 'params': {'C': 3}}
-           ]
+pokedex = [  # {'Clf': 'SVM', 'Params': {'C': 3}, 'Result': "None"}
+]
 
-#
-# root_parser = reqparse.RequestParser()
-# root_parser.add_argument('id', type=int)
-# root_parser.add_argument('name', type=str)
-# root_parser.add_argument('nested_one', type=dict)
-# root_parser.add_argument('nested_two', type=dict)
-# root_args = root_parser.parse_args()
-#
-# nested_one_parser = reqparse.RequestParser()
-# nested_one_parser.add_argument('id', type=int, location=('nested_one',))
-# nested_one_args = nested_one_parser.parse_args(req=root_args)
-#
-# nested_two_parser = reqparse.RequestParser()
-# nested_two_parser.add_argument('id', type=int, location=('nested_two',))
-# nested_two_args = nested_two_parser.parse_args(req=root_args)
 
 class Pokemon(Resource):
+    def get(self):
+        return jsonify({'pokedex': pokedex})
 
     def post(self):
+
+        pokedex.clear()
+
+        with open('./DataSet/x_data_filtered.pickle', 'rb') as f:
+            x_data_filtered = pickle.load(f)
+
+        with open('./DataSet/y_data_filtered.pickle', 'rb') as f:
+            y_data_filtered = pickle.load(f)
+
         parser = reqparse.RequestParser()
-        parser.add_argument('clf', type=str, required=True, location='json', help='classifier not blank ! ')
-        parser.add_argument('Params', type=dict, required=True, location='json', help='Value of params !')
-        parser.add_argument('crossval', type=bool, location="json", help="not crossval score")
+        parser.add_argument('Clf', type=str, required=True, location='json', help='classifier not blank ! ')
+        parser.add_argument('ParamsClf', type=dict, required=False, location='json', help='Value of params !')
+        parser.add_argument('GridSearch', type=bool, required=True, location='json', help="Gridsearch not defined !")
+        parser.add_argument('ParamsGrid', type=dict, required=False, location='json', help='Value of params !')
+        parser.add_argument('Result', type=str, required=True, location="json", help="not evaluator defined !")
 
         args = parser.parse_args(strict=True)
-        RecupClassificator = args['clf']
-        RecupParamsClassificator = args['params']
-        RecupIfCrossvalScore = args['crossval']
 
-        # return the result
-        return {'Result': 12}
+        dictClassificator = {
+            'SVM': svm.SVC(),
+            'Gaussian': GaussianNB(),
+            'RandomForestClassifier': RandomForestClassifier(),
+            'LogisticRegression': LogisticRegression(),
+            'MLPClassifier': MLPClassifier(),
+        }
+        try:
+            # create the classificator
+            clf = dictClassificator[args['Clf']]
 
+            # check if he want a gridsearch
+            if args['GridSearch']:
+
+                grid = GridSearchCV(estimator=clf, param_grid=[args['ParamsGrid']], n_jobs=-1)
+                grid.fit(x_data_filtered, y_data_filtered)
+
+                resultParams = ""
+                for key, value in grid.best_params_.items():
+                    resultParams+="param : {0}  value : {1} \n".format(key,value)
+
+                args['Result'] = (
+                    "Accuracy: {0}  \n ".format(grid.best_score_) + resultParams)
+
+            else:
+                # check if he have parameters
+                if len(args['ParamsClf']) != 0:
+                    clf.set_params(**args['ParamsClf'])
+
+                # evaluate the scoring
+                scores = cross_val_score(clf, x_data_filtered, y_data_filtered, cv=3)
+                args['Result'] = ("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
+
+        except Exception as e:
+            print(type(args['GridSearch']))
+            template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+            message = template.format(type(e).__name__, e.args)
+
+            print(message)
+            args['Result'] = message
+            pass
+
+        # return classificatior object in json
+        classificator = {'Clf': args['Clf'], 'ParamsClf': args['ParamsClf'], 'GridSearch': args['GridSearch'],
+                         'Result': args['Result']}
+        pokedex.append(classificator)
+        return jsonify({'pokedex': pokedex})
+
+        # CHECK POST
+
+        # check SVM
+        # curl -i -H "Content-Type: application/json" -X POST -d '{"Clf":"SVM","Params":{"kernel":"rbf","C": 3},"Result":"None"}' http://localhost:5000/pokemon
+
+        # check randomforest
+        # curl -i -H "Content-Type: application/json" -X POST -d '{"Clf":"RandomForestClassifier","Params":{"n_estimators":10},"Result":"None"}' http://localhost:5000/pokemon
+
+        # check gridsearch svm
+        # curl -i -H "Content-Type: application/json" -X POST -d '{"Clf":"SVM","GridSearch":"True", "ParamsGrid":[{"C": [1, 10, 100, 1000], "kernel": ["rbf"]}],"Result":"None"}' http://localhost:5000/pokemon
 
 api.add_resource(Pokemon, '/pokemon')
 
@@ -46,3 +105,23 @@ if __name__ == '__main__':
     app.run(debug=True)
 
 
+    # def GridSearchSVM():
+    #     # define all parameters to test the SVM (different kernel and C)
+    #     param_grid = [
+    #         # {'C': [1, 10, 100, 1000], 'kernel': ['linear']},
+    #         {'C': [1, 2, 3, 4, 5, 10, 50, 100, 500, 1000], 'kernel': ['rbf']},
+    #     ]
+    #
+    #     svc = svm.SVC()
+    #     clf = GridSearchCV(estimator=svc, param_grid=param_grid, n_jobs=-1)
+    #     clf.fit(x_data_filtered, y_data_filtered)
+    #     print(clf.best_params_)
+    #     print(clf.best_score_)
+    #     means = clf.cv_results_['mean_test_score']
+    #     stds = clf.cv_results_['std_test_score']
+    #     print(means)
+    #     print(stds)
+    #
+    #     # clf = svm.SVC(kernel='rbf', C=2)
+    #     scores = cross_val_score(clf, x_data_filtered, y_data_filtered)
+    #     print("Accuracy: %f (+/- %f)" % (scores.mean(), scores.std() * 2))
