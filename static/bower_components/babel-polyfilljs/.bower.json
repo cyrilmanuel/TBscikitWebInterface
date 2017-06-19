@@ -1,0 +1,15 @@
+{
+  "name": "babel-polyfilljs",
+  "homepage": "https://github.com/babel/babel",
+  "version": "6.25.0",
+  "_release": "6.25.0",
+  "_resolution": {
+    "type": "version",
+    "tag": "v6.25.0",
+    "commit": "82f37841f54a69efe70acd5b1b8b142a102908c8"
+  },
+  "_source": "https://github.com/babel/babel.git",
+  "_target": "^6.25.0",
+  "_originalSource": "babel-polyfilljs",
+  "_direct": true
+}

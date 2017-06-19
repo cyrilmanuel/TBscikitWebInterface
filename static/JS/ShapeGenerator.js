@@ -1,7 +1,7 @@
 (function () {
 
     // constructor shape
-    function ShapeGenerator(name) {
+    function ShapeGenerator(name, sizeCanvas) {
         this.Container_constructor();
         // stock the name of the classifier this shape will be repr
         this.name = name;
@@ -10,6 +10,7 @@
         // with React, a approprieted form
         this.dicParams = getData()[this.name];
 
+        this.sizeCanvas = sizeCanvas;
         // variable can toggle to know if user click the shape or move the shape.
         this.isStateClick = true;
         this.setup();
@@ -38,14 +39,13 @@
         // define the type of cursor
         this.cursor = "arrow";
 
-
         this.mouseChildren = false;
 
         this.offset = Math.random() * 10;
         this.count = 0;
 
-        //TODO center the shape on pop to the center of canvas
-        this.x = this.y = 200;
+        this.x = this.sizeCanvas["width"] / 2;
+        this.y = this.sizeCanvas["height"] / 2;
     };
 
     p.handleClick = function (event) {

@@ -1,0 +1,22 @@
+{
+  "name": "interfaceml",
+  "version": "1.0.0",
+  "description": "npm for project interfaceML",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cyrilmanuel/interfaceMl.git"
+  },
+  "author": "Cyril Jeanneret",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cyrilmanuel/interfaceMl/issues"
+  },
+  "homepage": "https://github.com/cyrilmanuel/interfaceMl#readme",
+  "devDependencies": {
+    "bower": "^1.8.0"
+  }
+}

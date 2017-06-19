@@ -1,8 +1,20 @@
-from flask import Flask, jsonify, render_template, json, request
-from flask_restful import Resource, Api, reqparse
+# TODO metre en place un cache (cache lru)
+# TODO creation du formulaire react
+# TODO création d'une poubelle a shape
+# TODO mise en place liste colors selons un panel pour les shape
+# TODO création page pour insérer la bdd sqlite et créer les fichiers Data
+# TODO faire tout les TODO écrit un peu partout
+# TODO réaliser un drag and drop animer pour une nouvelle shape constituer (ensemble learning)
+# TODO mettre une place la liste des shapes en backend pour eviter de process pour rien
+# TODO créer non plus une seule requête ajax mais plusieurs requête POST
+# TODO permettre de définir un moyen d'éviter un timeout d'une requete POST.
+
+
+from flask import Flask, jsonify, render_template, request
+from flask_restful import Resource, Api
 import pickle
 from sklearn.utils.testing import all_estimators
-from sklearn.model_selection import cross_val_score, GridSearchCV
+from sklearn.model_selection import cross_val_score
 from importlib import import_module
 
 app = Flask(__name__)
@@ -61,25 +73,25 @@ class UseScikit(Resource):
         resultatform = {}
         for k, v in receive_json.items():
             for key, value in v.items():
-                # TODO create try and if ok, return result
-                # TODO and stock them into the listProcess
-                # TODO if not, return into result, the error return by scikit
+                try:
+                    # create the classificator
+                    clf = dictEstimator[key]()
+                    # send params issue by the request
+                    clf.set_params(**value)
 
-                # create the classificator
-                clf = dictEstimator[key]()
-                # send params issue by the request
-                clf.set_params(**value)
+                    # évaluate the scoring
+                    scores = cross_val_score(clf, x_data_filtered, y_data_filtered, cv=3)
 
-                #évaluate the scoring
-                # TODO créate an évaluation in fonction of the type
-                # TODO of the CLF
-                scores = cross_val_score(clf, x_data_filtered, y_data_filtered, cv=3)
+                    # Stock the result into variable resultat
+                    resultat = ("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
 
-                # Stock the result into variable resultat
-                resultat = ("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
+                    # stock for the id of the shape, the result (dict form { idShape : resultat}
+                    resultatform[k] = resultat
 
-                # stock for the id of the shape, the result (dict form { idShape : resultat}
-                resultatform[k] = resultat
+                except Exception as e:
+                    template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+                    message = template.format(type(e).__name__, e.args)
+                    resultatform[k] = message
 
         # return all result processed
         return jsonify(resultatform)
@@ -98,6 +110,7 @@ class UseScikit(Resource):
 
 # route to process Scikit-learn
 api.add_resource(UseScikit, '/backend')
+
 
 # define the route of the index
 @app.route('/')
