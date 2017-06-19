@@ -10,15 +10,6 @@ It's for users don't want to code with python or Scikit but, they know how the m
 
 ## Installation
 
-
-
-
-## Tests
-
-## Contributors
-
-
-
 into a terminal Linux or Mac OS :
 
 ```
@@ -59,3 +50,7 @@ python app.py
 ```
 
 open your browser to the localhost:5000
+
+## Tests
+
+## Contributors
