@@ -16,15 +16,16 @@
 
 <body onload="init();">
 <div class="row">
-    <div class="col s2 offset-s1">This div is 2-columns wide
+    <div class="col s3">
         <div class="row">
             <div id="app">
             </div>
         </div>
     </div>
-    <div class="col s6">This div is 6-columns wide
+    <div class="col s6">
         <div class="row">
-            <div class="col s12">T
+            <div class="col s12">
+                <canvas id="demoCanvas" width="500" height="300"></canvas>
             </div>
         </div>
     </div>
@@ -37,19 +38,28 @@
 
     function init() {
         $.getJSON("backend", function success(data) {
-
                 var f = [];
                 for (var key in data) {
                     f.push(key);
                 }
-
                 shareRenderFunc5(f);
             }
         );
+
+        var stage = new createjs.Stage("demoCanvas");
+        createjs.Ticker.addEventListener("tick", handleTick);
+        function handleTick(event) {
+            stage.update();
+        };
+        window.addShape = function (shape) {
+            stage.addChild(shape);
+        }
     };
 
     window.clictodraw = function (name) {
-        alert(name);
+        var fu = new SVM(name,"#F00",3,2);
+        window.addShape(fu);
+
     }
 </script>
 </body>

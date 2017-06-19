@@ -2,21 +2,17 @@
 
 (function() {
 
-function SVM(c, gamma, kernel) {
+function SVM(name, c, gamma, kernel) {
 	this.Container_constructor();
 
 	this.kernel = kernel;
 	this.c = c;
 	this.gamma = gamma;
-	this.clfName = "SVM";
+	this.clfName = name;
 	this.setup();
 }
 var p = createjs.extend(SVM, createjs.Container);
 
-
-p.getData = function () {
-    return {"C":this.c};
-}
 
 p.setup = function() {
 	var text = new createjs.Text(this.clfName, "20px Arial", "#000");
@@ -42,8 +38,8 @@ p.setup = function() {
 } ;
 
 p.handleClick = function (event) {
-	shareRenderFunc();
-	alert("You clicked on a button:" + this.clfName);
+	//shareRenderFunc();
+	alert(this.clfName)
 } ;
 
 p.handleRollOver = function(event) {

@@ -11,14 +11,14 @@ class ButtonList extends React.Component {
         let rows = items.map(
             item => {
                 return (
-                    <button className="btn waves-effect waves-light" onClick={this.onClick} id={item}
-                            key={item}>{item}</button>
+                     <li className="collection-item" onClick={this.onClick} id={item}
+                            key={item}>{item}</li>
                 );
             }
         );
 
         return (
-            <div className="col s12">{rows}</div>
+             <ul className="collection">{rows}</ul>
         );
     }
 }
