@@ -1,24 +1,19 @@
-# TODO metre en place un cache (cache lru)
-# TODO creation du formulaire react
-# TODO création d'une poubelle a shape
-# TODO mise en place liste colors selons un panel pour les shape
-# TODO création page pour insérer la bdd sqlite et créer les fichiers Data
-# TODO faire tout les TODO écrit un peu partout
-# TODO réaliser un drag and drop animer pour une nouvelle shape constituer (ensemble learning)
-# TODO mettre une place la liste des shapes en backend pour eviter de process pour rien
-# TODO créer non plus une seule requête ajax mais plusieurs requête POST
-# TODO permettre de définir un moyen d'éviter un timeout d'une requete POST.
-
-
 from flask import Flask, jsonify, render_template, request
 from flask_restful import Resource, Api
 import pickle
 from sklearn.utils.testing import all_estimators
 from sklearn.model_selection import cross_val_score
 from importlib import import_module
+from werkzeug.utils import secure_filename
+
+#UPLOAD_FOLDER = './DataSet'
+#ALLOWED_EXTENSIONS = set(['sqllite'])
+
 
 app = Flask(__name__)
+#app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 api = Api(app)
+
 
 with open('./DataSet/x_data_filtered.pickle', 'rb') as f:
     x_data_filtered = pickle.load(f)
@@ -113,9 +108,15 @@ api.add_resource(UseScikit, '/backend')
 
 
 # define the route of the index
-@app.route('/')
-def hello_world():
+@app.route('/index')
+def index():
     return render_template('index.html')
+
+
+# define the route of the index
+@app.route('/')
+def upload_file():
+    return render_template('upload.html')
 
 
 # start point

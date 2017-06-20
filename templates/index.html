@@ -3,18 +3,16 @@
 <head>
     <title>Index</title>
     <meta charset="utf-8">
-    <script src="{{ url_for('static', filename='bower_components/babel/browser.js') }}"></script>
-    <script src="{{ url_for('static', filename='bower_components/jquery/dist/jquery.js') }}"></script>
-    <script src="{{ url_for('static', filename='bower_components/react/react.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='bower_components/react/react-dom.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='bower_components/EaselJS/lib/easeljs-0.8.2.min.js') }}"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='bower_components/materialize/bin/materialize.css') }}">
-    <script src="{{ url_for('static', filename='bower_components/materialize/bin/materialize.js') }}"></script>
 
-    <!--  SCRIPT PERSON --->
-    <script type="text/babel" src="{{url_for('static', filename='JS/ReactComponentProject.js')}}"></script>
-    <script src="{{url_for('static', filename='JS/ShapeGenerator.js')}}"></script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+    <script src="{{ url_for('static', filename='node_modules/jquery/dist/jquery.js') }}"></script>
+        <script src="{{ url_for('static', filename='node_modules/react/dist/react.js') }}"></script>
+<script src="{{ url_for('static', filename='node_modules/react-dom/dist/react-dom.js') }}"></script>
+    <script src="{{ url_for('static', filename='node_modules/createjs-module/vendor_modules/EaselJS-0.8.2/lib/easeljs-0.8.2.min.js') }}"></script>
+    <script type="text/babel" src="{{ url_for('static', filename='JS/ReactComponentProject.js') }}"></script>
+    <script src="{{ url_for('static', filename='JS/ShapeGenerator.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='node_modules/materialize-css/bin/materialize.css') }}">
+<script src="{{ url_for('static', filename='node_modules/materialize-css/bin/materialize.js') }}"></script>
 </head>
 
 <body onload="init();">
@@ -27,7 +25,8 @@
         </div>
     </div>
     <div class="col s6">
-        <canvas id="demoCanvas" width="600" height="600" style="border: 1px solid black; width: 100%; height: 100% "></canvas>
+        <canvas id="demoCanvas" width="600" height="600"
+                style="border: 1px solid black; width: 100%; height: 100% "></canvas>
         <div class="row">
             <form id="my-form" class="col s12 center-align">
                 <button class="btn" type="submit">Process</button>
@@ -45,8 +44,8 @@
         </div>
         <div class="row center-align">
             <div id="formClassificator">
-            <!------------------ RENDER FORM PARAMETERS FOR SHAPE CLASSIFIER BY REACT ---------------------------->
-        </div>
+                <!------------------ RENDER FORM PARAMETERS FOR SHAPE CLASSIFIER BY REACT ---------------------------->
+            </div>
         </div>
 
     </div>
@@ -109,7 +108,9 @@
             stage.removeChild(listShapeOnCanvas[idShape]);
             listShapeOnCanvas.splice(idShape, 1);
         };
-    };
+    }
+    (jQuery);
+    ;
 
     // -------------------------------- send data to backend in ajax -------------------------
     (function ($) {
@@ -139,6 +140,118 @@
         $('#my-form').submit(processForm);
     })(jQuery);
 
+</script>
+
+<script TYPE="text/babel">
+    /**
+     * Created by cyriljeanneret on 14.06.17.
+     */
+    class ButtonList extends React.Component {
+        onClick(event) {
+            window.addShape(event.target.id);
+        }
+
+        render() {
+            let items = this.props.items || []
+            let rows = items.map(
+                item => {
+                    return (
+                            <a className="collection-item" onClick={this.onClick} id={item}
+                               key={item}>{item}</a>
+                    );
+                }
+            );
+            return (
+                    <div className="collection">{rows}</div>
+            );
+        }
+    }
+
+    window.shareRenderButtonList = function (tab) {
+        ReactDOM.render(
+                <ButtonList items={tab}/>,
+            document.getElementById('classifier')
+        );
+    };
+
+    // ------------------------------------------- Show Form ---------------------------------------
+
+    class FormShape extends React.Component {
+        render() {
+            let dict = this.props.dict || {}
+            let label = Object.keys(dict).map(name => {
+                    return (
+                            <div>{name} : {dict[name]}</div>
+                    );
+                }
+            );
+            return (
+                    <div>{label}</div>
+            );
+        }
+    }
+    ;
+
+
+    //------------------------------------- LabelForm ---------------------------------------
+    class LabelForForm extends React.Component {
+        render() {
+            return (
+                    <div>
+                        <label for={this.props.forLabel}>{this.props.nameLabel}</label>
+                        {this.props.children}
+                    </div>
+            );
+        }
+    }
+    ;
+
+
+    class inputForForm extends React.Component {
+        render() {
+            let t = this.props.t;
+            return (
+                    <LabelForForm nameLabel={"hello"}>
+                        <div>parent</div>
+                    </LabelForForm>
+            );
+        };
+    }
+
+
+    window.shareRenderFormShape = function (dictParamsClassifier) {
+        ReactDOM.render(
+                <FormShape dict={dictParamsClassifier}/>,
+            document.getElementById('formClassificator')
+        );
+    };
+
+
+    // ------------------------ RENDER RETURN RESULT OF JSON -----------------------
+
+    class ResultDiv extends React.Component {
+        render() {
+            let dict = this.props.dict || {}
+            let result = Object.keys(dict).map(name => {
+                    return (
+                            <div>id of the shape = {name} {dict[name]}
+                            </div>
+                    );
+                }
+            );
+            return (
+                    <div>{result}</div>
+            );
+        }
+    }
+
+    window.shareRenderResult = function (DictResultPost) {
+
+        ReactDOM.render(
+                <ResultDiv dict={DictResultPost}/>,
+            document.getElementById('response')
+        );
+    };
 </script>
 
 </body>
