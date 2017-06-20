@@ -15,8 +15,13 @@
   "bugs": {
     "url": "https://github.com/cyrilmanuel/interfaceMl/issues"
   },
-  "homepage": "https://github.com/cyrilmanuel/interfaceMl#readme",
-  "devDependencies": {
-    "bower": "^1.8.0"
+  "dependencies": {
+    "babel-core": "^6.25.0",
+    "createjs-module": "^0.8.2-9",
+    "jquery": "^3.2.1",
+    "materialize-css": "^0.98.2",
+    "nodejs": "0.0.0",
+    "react": "^15.6.1",
+    "react-dom": "^15.6.1"
   }
 }

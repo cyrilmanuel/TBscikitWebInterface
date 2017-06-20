@@ -1,11 +1,10 @@
 /**
  * Created by cyriljeanneret on 14.06.17.
- */
+*/
 class ButtonList extends React.Component {
     onClick(event) {
         window.addShape(event.target.id);
     }
-
     render() {
         let items = this.props.items || []
         let rows = items.map(
