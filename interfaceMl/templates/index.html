@@ -11,6 +11,7 @@
     <script src="{{ url_for('static', filename='node_modules/createjs-module/vendor_modules/EaselJS-0.8.2/lib/easeljs-0.8.2.min.js') }}"></script>
     <script type="text/babel" src="{{ url_for('static', filename='JS/ReactComponentProject.js') }}"></script>
     <script src="{{ url_for('static', filename='JS/ShapeGenerator.js') }}"></script>
+    <script src="{{ url_for('static', filename='JS/TrashGenerator.js') }}"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='node_modules/materialize-css/bin/materialize.css') }}">
 <script src="{{ url_for('static', filename='node_modules/materialize-css/bin/materialize.js') }}"></script>
 </head>
@@ -80,8 +81,20 @@
         // --------------------------------- init canvas ---------------------
         var stage = new createjs.Stage("demoCanvas");
         createjs.Ticker.addEventListener("tick", handleTick);
+        // add trash
+            var sizeCanvas = {"width": stage.canvas.width, "height": stage.canvas.height};
+            var temp = new TrashGenerator("poubelle", sizeCanvas);
+            stage.addChild(temp);
+            listShapeOnCanvas.push(temp);
+
         function handleTick(event) {
+           for (var i in listShapeOnCanvas){
+                var pt = listShapeOnCanvas[i].localToLocal(100,0,listShapeOnCanvas[0]);
+                if (listShapeOnCanvas[0].hitTest(pt.x, pt.y)) {
+                   removeShape(i);
+                }
             stage.update();
+            }
         };
 
         // ------------------------- func global for add shape to stage ---------------------
@@ -98,7 +111,9 @@
             //parcour all shape on canvas and return a dict
             // like this {id : {name : {params classifier}} }
             for (var indexShape in listShapeOnCanvas) {
-                res[indexShape] = listShapeOnCanvas[indexShape].getDataDict();
+                if (indexShape!=0){
+                     res[indexShape] = listShapeOnCanvas[indexShape].getDataDict();
+                }
             }
             return res;
         };
