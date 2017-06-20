@@ -1,19 +1,19 @@
-from flask import Flask, jsonify, render_template, request
+import os
+import extractSqlToPickle
+from flask import Flask, jsonify, render_template, request, flash, url_for
 from flask_restful import Resource, Api
 import pickle
 from sklearn.utils.testing import all_estimators
 from sklearn.model_selection import cross_val_score
 from importlib import import_module
-from werkzeug.utils import secure_filename
+from werkzeug.utils import secure_filename, redirect
 
-#UPLOAD_FOLDER = './DataSet'
-#ALLOWED_EXTENSIONS = set(['sqllite'])
-
+UPLOAD_FOLDER = 'DataSet/'
+ALLOWED_EXTENSIONS = set(['sqlite3'])
 
 app = Flask(__name__)
-#app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 api = Api(app)
-
 
 with open('./DataSet/x_data_filtered.pickle', 'rb') as f:
     x_data_filtered = pickle.load(f)
@@ -103,6 +103,11 @@ class UseScikit(Resource):
         # curl -i -H "Content-Type: application/json" -X POST -d '{"Clf":"SVM","GridSearch":"True", "ParamsGrid":[{"C": [1, 10, 100, 1000], "kernel": ["rbf"]}],"Result":"None"}' http://localhost:5000/index
 
 
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
 # route to process Scikit-learn
 api.add_resource(UseScikit, '/backend')
 
@@ -113,12 +118,27 @@ def index():
     return render_template('index.html')
 
 
-# define the route of the index
-@app.route('/')
+# define the route of the upload
+@app.route('/', methods=['GET', 'POST'])
 def upload_file():
+    if request.method == 'POST':
+        # check if the post request has the file part
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        file = request.files['file']
+        print(file)
+        # if user does not select file, browser also
+        # submit a empty part without filename
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], "dbUpload.sqlite3"))
+            extractSqlToPickle.process()
+            return redirect(url_for('index'))
     return render_template('upload.html')
 
-
-# start point
+    # start point
 if __name__ == '__main__':
     app.run(debug=True)
