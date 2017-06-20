@@ -155,5 +155,5 @@ interfaceMl/DataSet/
 
 
 *.DS_Store
-
+interfaceMl/static/node_modules/
 interfaceMl/extractSqlToPickle.py

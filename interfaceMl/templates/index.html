@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Index</title>
+    <meta charset="utf-8">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+    <script src="{{ url_for('static', filename='node_modules/jquery/dist/jquery.js') }}"></script>
+        <script src="{{ url_for('static', filename='node_modules/react/dist/react.js') }}"></script>
+<script src="{{ url_for('static', filename='node_modules/react-dom/dist/react-dom.js') }}"></script>
+    <script src="{{ url_for('static', filename='node_modules/createjs-module/vendor_modules/EaselJS-0.8.2/lib/easeljs-0.8.2.min.js') }}"></script>
+    <script type="text/babel" src="{{ url_for('static', filename='JS/ReactComponentProject.js') }}"></script>
+    <script src="{{ url_for('static', filename='JS/ShapeGenerator.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='node_modules/materialize-css/bin/materialize.css') }}">
+<script src="{{ url_for('static', filename='node_modules/materialize-css/bin/materialize.js') }}"></script>
+</head>
+
+<body onload="init();">
+<div class="row">
+    <div class="col s3">
+        <div class="row">
+            <div id="classifier">
+                <!--  RENDER LIST CLASSIFIER BY REACT -->
+            </div>
+        </div>
+    </div>
+    <div class="col s6">
+        <canvas id="demoCanvas" width="600" height="600"
+                style="border: 1px solid black; width: 100%; height: 100% "></canvas>
+        <div class="row">
+            <form id="my-form" class="col s12 center-align">
+                <button class="btn" type="submit">Process</button>
+            </form>
+        </div>
+        <div class="row">
+            <div id="response" class="col s12 center-align">
+                <!-- RENDER RESPONSE AJAX BY REACT -->
+            </div>
+        </div>
+    </div>
+    <div class="col s2">
+        <div class="row">
+
+        </div>
+        <div class="row center-align">
+            <div id="formClassificator">
+                <!-- RENDER FORM PARAMETERS FOR SHAPE CLASSIFIER BY REACT -->
+            </div>
+        </div>
+
+    </div>
+</div>
+<script>
+    // create tab container of shape
+    var listShapeOnCanvas = [];
+    // create tab contain all name of classifier
+    var listOfAllNameClassifier = [];
+    // dictionnary contain return request get (all classifier and params)
+    var dictAllClassificator = {};
+
+    // fonction contain all classifier and params
+    window.getData = function () {
+        return dictAllClassificator;
+    };
+
+    // --------------------------------- initialisation of the canvas --------------
+    function init() {
+        // -------------------------- request Get in ajax ------------
+        $.getJSON("backend", function success(data) {
+                dictAllClassificator = data;
+
+                for (var key in data) {
+                    listOfAllNameClassifier.push(key);
+                }
+                // generate button list with all name classifier
+                shareRenderButtonList(listOfAllNameClassifier);
+            }
+        );
+
+        // --------------------------------- init canvas ---------------------
+        var stage = new createjs.Stage("demoCanvas");
+        createjs.Ticker.addEventListener("tick", handleTick);
+        function handleTick(event) {
+            stage.update();
+        };
+
+        // ------------------------- func global for add shape to stage ---------------------
+        window.addShape = function (name) {
+            var sizeCanvas = {"width": stage.canvas.width, "height": stage.canvas.height};
+            var temp = new ShapeGenerator(name, sizeCanvas);
+            stage.addChild(temp);
+            listShapeOnCanvas.push(temp);
+        };
+
+        // -------------------------- return request --------------
+        window.getDFS = function () {
+            var res = {};
+            //parcour all shape on canvas and return a dict
+            // like this {id : {name : {params classifier}} }
+            for (var indexShape in listShapeOnCanvas) {
+                res[indexShape] = listShapeOnCanvas[indexShape].getDataDict();
+            }
+            return res;
+        };
+
+        window.removeShape = function (idShape) {
+            // TODO remove the shape by id
+            stage.removeChild(listShapeOnCanvas[idShape]);
+            listShapeOnCanvas.splice(idShape, 1);
+        };
+    }
+    (jQuery);
+    ;
+
+    // -------------------------------- send data to backend in ajax -------------------------
+    (function ($) {
+        function processForm(e) {
+            // recup all value to push on backend
+            var dataToSend = window.getDFS();
+
+            // ajax POST
+            $.ajax({
+                url: 'backend',
+                dataType: 'text',
+                type: 'post',
+                contentType: 'application/json',
+                data: JSON.stringify(dataToSend),
+                //data: JSON.stringify({"SVC": {"C": 1.0, "kernel": "rbf", "cache_size": 200, "tol": 0.001, "max_iter": -1, "class_weight": null, "shrinking": true, "degree": 3, "random_state": null, "coef0": 0.0, "decision_function_shape": null, "gamma": "auto", "probability": false, "verbose": false}}),
+                success: function (dataReceive, textStatus, jQxhr) {
+                    window.shareRenderResult(JSON.parse(dataReceive));
+                },
+                error: function (jqXhr, textStatus, errorThrown) {
+                    console.log(errorThrown);
+                }
+            });
+
+            e.preventDefault();
+        }
+
+        $('#my-form').submit(processForm);
+    })(jQuery);
+
+</script>
+
+<script TYPE="text/babel">
+    /**
+     * Created by cyriljeanneret on 14.06.17.
+     */
+    class ButtonList extends React.Component {
+        onClick(event) {
+            window.addShape(event.target.id);
+        }
+
+        render() {
+            let items = this.props.items || []
+            let rows = items.map(
+                item => {
+                    return (
+                            <a className="collection-item" onClick={this.onClick} id={item}
+                               key={item}>{item}</a>
+                    );
+                }
+            );
+            return (
+                    <div className="collection">{rows}</div>
+            );
+        }
+    }
+
+    window.shareRenderButtonList = function (tab) {
+        ReactDOM.render(
+                <ButtonList items={tab}/>,
+            document.getElementById('classifier')
+        );
+    };
+
+    // ------------------------------------------- Show Form ---------------------------------------
+
+    class FormShape extends React.Component {
+        render() {
+            let dict = this.props.dict || {}
+            let label = Object.keys(dict).map(name => {
+                    return (
+                            <div>{name} : {dict[name]}</div>
+                    );
+                }
+            );
+            return (
+                    <div>{label}</div>
+            );
+        }
+    }
+    ;
+
+
+    //------------------------------------- LabelForm ---------------------------------------
+    class LabelForForm extends React.Component {
+        render() {
+            return (
+                    <div>
+                        <label for={this.props.forLabel}>{this.props.nameLabel}</label>
+                        {this.props.children}
+                    </div>
+            );
+        }
+    }
+    ;
+
+
+    class inputForForm extends React.Component {
+        render() {
+            let t = this.props.t;
+            return (
+                    <LabelForForm nameLabel={"hello"}>
+                        <div>parent</div>
+                    </LabelForForm>
+            );
+        };
+    }
+
+
+    window.shareRenderFormShape = function (dictParamsClassifier) {
+        ReactDOM.render(
+                <FormShape dict={dictParamsClassifier}/>,
+            document.getElementById('formClassificator')
+        );
+    };
+
+
+    // ------------------------ RENDER RETURN RESULT OF JSON -----------------------
+
+    class ResultDiv extends React.Component {
+        render() {
+            let dict = this.props.dict || {}
+            let result = Object.keys(dict).map(name => {
+                    return (
+                            <div>id of the shape = {name} {dict[name]}
+                            </div>
+                    );
+                }
+            );
+            return (
+                    <div>{result}</div>
+            );
+        }
+    }
+
+    window.shareRenderResult = function (DictResultPost) {
+
+        ReactDOM.render(
+                <ResultDiv dict={DictResultPost}/>,
+            document.getElementById('response')
+        );
+    };
+</script>
+
+</body>
+</html>
