@@ -6,14 +6,16 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
     <script src="{{ url_for('static', filename='node_modules/jquery/dist/jquery.js') }}"></script>
-        <script src="{{ url_for('static', filename='node_modules/react/dist/react.js') }}"></script>
-<script src="{{ url_for('static', filename='node_modules/react-dom/dist/react-dom.js') }}"></script>
+    <script src="{{ url_for('static', filename='node_modules/react/dist/react.js') }}"></script>
+    <script src="{{ url_for('static', filename='node_modules/react-dom/dist/react-dom.js') }}"></script>
     <script src="{{ url_for('static', filename='node_modules/createjs-module/vendor_modules/EaselJS-0.8.2/lib/easeljs-0.8.2.min.js') }}"></script>
     <script type="text/babel" src="{{ url_for('static', filename='JS/ReactComponentProject.js') }}"></script>
     <script src="{{ url_for('static', filename='JS/ShapeGenerator.js') }}"></script>
     <script src="{{ url_for('static', filename='JS/TrashGenerator.js') }}"></script>
+    <link rel="shortcut icon" href="">
     <link rel="stylesheet" href="{{ url_for('static', filename='node_modules/materialize-css/bin/materialize.css') }}">
-<script src="{{ url_for('static', filename='node_modules/materialize-css/bin/materialize.js') }}"></script>
+    <script src="{{ url_for('static', filename='node_modules/materialize-css/bin/materialize.js') }}"></script>
+
 </head>
 
 <body onload="init();">
@@ -82,18 +84,18 @@
         var stage = new createjs.Stage("demoCanvas");
         createjs.Ticker.addEventListener("tick", handleTick);
         // add trash
-            var sizeCanvas = {"width": stage.canvas.width, "height": stage.canvas.height};
-            var temp = new TrashGenerator("poubelle", sizeCanvas);
-            stage.addChild(temp);
-            listShapeOnCanvas.push(temp);
+        var sizeCanvas = {"width": stage.canvas.width, "height": stage.canvas.height};
+        var temp = new TrashGenerator("poubelle", sizeCanvas);
+        stage.addChild(temp);
+        listShapeOnCanvas.push(temp);
 
         function handleTick(event) {
-           for (var i in listShapeOnCanvas){
-                var pt = listShapeOnCanvas[i].localToLocal(100,0,listShapeOnCanvas[0]);
+            for (var i in listShapeOnCanvas) {
+                var pt = listShapeOnCanvas[i].localToLocal(100, 0, listShapeOnCanvas[0]);
                 if (listShapeOnCanvas[0].hitTest(pt.x, pt.y)) {
-                   removeShape(i);
+                    removeShape(i);
                 }
-            stage.update();
+                stage.update();
             }
         };
 
@@ -111,8 +113,8 @@
             //parcour all shape on canvas and return a dict
             // like this {id : {name : {params classifier}} }
             for (var indexShape in listShapeOnCanvas) {
-                if (indexShape!=0){
-                     res[indexShape] = listShapeOnCanvas[indexShape].getDataDict();
+                if (indexShape != 0) {
+                    res[indexShape] = listShapeOnCanvas[indexShape].getDataDict();
                 }
             }
             return res;
@@ -120,12 +122,18 @@
 
         window.removeShape = function (idShape) {
             // TODO remove the shape by id
-            stage.removeChild(listShapeOnCanvas[idShape]);
+            if (confirm('Are you sure you want to remove the shape '+ idShape +'?')) {
+                stage.removeChild(listShapeOnCanvas[idShape]);
             listShapeOnCanvas.splice(idShape, 1);
+            shareRenderInitFormulaireShape();
+            } else {
+                listShapeOnCanvas[idShape].resetPositionShape();
+            }
+
         };
     }
     (jQuery);
-    ;
+
 
     // -------------------------------- send data to backend in ajax -------------------------
     (function ($) {
@@ -156,118 +164,5 @@
     })(jQuery);
 
 </script>
-
-<script TYPE="text/babel">
-    /**
-     * Created by cyriljeanneret on 14.06.17.
-     */
-    class ButtonList extends React.Component {
-        onClick(event) {
-            window.addShape(event.target.id);
-        }
-
-        render() {
-            let items = this.props.items || []
-            let rows = items.map(
-                item => {
-                    return (
-                            <a className="collection-item" onClick={this.onClick} id={item}
-                               key={item}>{item}</a>
-                    );
-                }
-            );
-            return (
-                    <div className="collection">{rows}</div>
-            );
-        }
-    }
-
-    window.shareRenderButtonList = function (tab) {
-        ReactDOM.render(
-                <ButtonList items={tab}/>,
-            document.getElementById('classifier')
-        );
-    };
-
-    // ------------------------------------------- Show Form ---------------------------------------
-
-    class FormShape extends React.Component {
-        render() {
-            let dict = this.props.dict || {}
-            let label = Object.keys(dict).map(name => {
-                    return (
-                            <div>{name} : {dict[name]}</div>
-                    );
-                }
-            );
-            return (
-                    <div>{label}</div>
-            );
-        }
-    }
-    ;
-
-
-    //------------------------------------- LabelForm ---------------------------------------
-    class LabelForForm extends React.Component {
-        render() {
-            return (
-                    <div>
-                        <label for={this.props.forLabel}>{this.props.nameLabel}</label>
-                        {this.props.children}
-                    </div>
-            );
-        }
-    }
-    ;
-
-
-    class inputForForm extends React.Component {
-        render() {
-            let t = this.props.t;
-            return (
-                    <LabelForForm nameLabel={"hello"}>
-                        <div>parent</div>
-                    </LabelForForm>
-            );
-        };
-    }
-
-
-    window.shareRenderFormShape = function (dictParamsClassifier) {
-        ReactDOM.render(
-                <FormShape dict={dictParamsClassifier}/>,
-            document.getElementById('formClassificator')
-        );
-    };
-
-
-    // ------------------------ RENDER RETURN RESULT OF JSON -----------------------
-
-    class ResultDiv extends React.Component {
-        render() {
-            let dict = this.props.dict || {}
-            let result = Object.keys(dict).map(name => {
-                    return (
-                            <div>id of the shape = {name} {dict[name]}
-                            </div>
-                    );
-                }
-            );
-            return (
-                    <div>{result}</div>
-            );
-        }
-    }
-
-    window.shareRenderResult = function (DictResultPost) {
-
-        ReactDOM.render(
-                <ResultDiv dict={DictResultPost}/>,
-            document.getElementById('response')
-        );
-    };
-</script>
-
 </body>
 </html>

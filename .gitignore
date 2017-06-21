@@ -153,7 +153,7 @@ fabric.properties
 interfaceMl/DataSet/
 
 
-
+.DS_Store
 *.DS_Store
 interfaceMl/static/node_modules/
 interfaceMl/extractSqlToPickle.py

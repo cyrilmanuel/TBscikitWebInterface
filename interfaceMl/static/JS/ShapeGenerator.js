@@ -13,8 +13,11 @@
         this.sizeCanvas = sizeCanvas;
         // variable can toggle to know if user click the shape or move the shape.
         this.isStateClick = true;
+
+        this.isStateRemoveShape = false;
         this.setup();
     }
+
     // extend of container to create round shape with name inside
     var p = createjs.extend(ShapeGenerator, createjs.Container);
 
@@ -25,7 +28,7 @@
         this.text.textAlign = "center";
 
         var background = new createjs.Shape();
-        var color = '#'+(0x1000000+(Math.random())*0xffffff).toString(16).substr(1,6);
+        var color = '#' + (0x1000000 + (Math.random()) * 0xffffff).toString(16).substr(1, 6);
         background.graphics.beginFill(color).drawCircle(0, 0, 50);
         this.addChild(background, this.text);
 
@@ -50,7 +53,7 @@
 
     p.handleClick = function (event) {
         if (this.isStateClick) {
-         shareRenderFormShape(this.dicParams);
+            shareRenderFormShape(this.dicParams);
         }
     };
 
@@ -59,13 +62,13 @@
     };
 
     p.handlePressUp = function (event) {
-         this.isStateClick = true;
+        this.isStateClick = true;
     };
 
 
     p.handlePressMove = function (event) {
-        event.target.x = event.stageX;
-        event.target.y = event.stageY;
+            event.target.x = event.stageX;
+            event.target.y = event.stageY;
         this.isStateClick = false;
     };
 
@@ -73,8 +76,12 @@
     // like this {name : {Params1:value1, Params2:value2}}
     p.getDataDict = function () {
         var temp = {};
-        temp[this.name]=this.dicParams;
+        temp[this.name] = this.dicParams;
         return temp;
+    }
+    p.resetPositionShape = function () {
+        this.x = this.sizeCanvas["width"] / 2;
+        this.y = this.sizeCanvas["height"] / 2;
     }
     // create window function. when, i can create shape in a script on the page index.html
     window.ShapeGenerator = createjs.promote(ShapeGenerator, "Container");

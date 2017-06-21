@@ -1,14 +1,14 @@
 # all the imports
 import os
+import pickle
+import traceback
+
 import interfaceMl.extractSqlToPickle
 from flask_restful import Resource, Api
-import pickle
 from sklearn.utils.testing import all_estimators
 from sklearn.model_selection import cross_val_score
 from importlib import import_module
-from werkzeug.utils import secure_filename, redirect
-import sqlite3
-from flask import Flask, request, session, g, redirect, url_for, abort, \
+from flask import Flask, request, redirect, url_for, \
     render_template, flash, jsonify
 
 # create the application instance :)
@@ -21,24 +21,21 @@ app.config.update(dict(
     USERNAME='admin',
     PASSWORD='test',
     UPLOAD_FOLDER='interfaceMl/DataSet/',
+    ALLOWED_EXTENSIONS_UPLOAD=set(['sqlite3']),
 ))
 
 api = Api(app)
 
+# TODO change all UPLOAD_FOLDER by app.config get
 UPLOAD_FOLDER = 'interfaceMl/DataSet/'
 ALLOWED_EXTENSIONS = set(['sqlite3'])
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
-
-print("hellooo------------------")
-print(os.path.abspath('.'))
 
 with open('interfaceMl/DataSet/x_data_filtered.pickle', 'rb') as f:
     x_data_filtered = pickle.load(f)
 
 with open('interfaceMl/DataSet/y_data_filtered.pickle', 'rb') as f:
     y_data_filtered = pickle.load(f)
-
 
 # dictEstimator is to stock object class and name objet
 dictEstimator = {}
@@ -70,8 +67,9 @@ for name, class_ in all_estimators():
             dictEstimator[name] = getattr(import_module(modulePath), name)
 
         # stock the param of the classifier
-        dictParamEstimator[name] = dictEstimator[name]().get_params(True)
-
+        dictParamEstimator[name] = dictEstimator[name]().get_params()
+        for h, j in dictParamEstimator[name].items():
+            print('{0} : {1}'.format(h, type(j)))
 
 class UseScikit(Resource):
     def get(self):
@@ -102,24 +100,12 @@ class UseScikit(Resource):
                     # stock for the id of the shape, the result (dict form { idShape : resultat}
                     resultatform[k] = resultat
 
+
                 except Exception as e:
-                    template = "An exception of type {0} occurred. Arguments:\n{1!r}"
-                    message = template.format(type(e).__name__, e.args)
-                    resultatform[k] = message
+                    traceback.format_exc()
 
         # return all result processed
         return jsonify(resultatform)
-
-        # CHECK POST
-
-        # check SVM
-        # curl -i -H "Content-Type: application/json" -X POST -d '{"SVC": {"C": 1.0, "kernel": "rbf", "cache_size": 200, "tol": 0.001, "max_iter": -1, "class_weight": null, "shrinking": true, "degree": 3, "random_state": null, "coef0": 0.0, "decision_function_shape": null, "gamma": "auto", "probability": false, "verbose": false}}' http://localhost:5000/ScikitInfo
-
-        # check randomforest
-        # curl -i -H "Content-Type: application/json" -X POST -d '{"Clf":"RandomForestClassifier","Params":{"n_estimators":10},"Result":"None"}' http://localhost:5000/pokemon
-
-        # check gridsearch svm
-        # curl -i -H "Content-Type: application/json" -X POST -d '{"Clf":"SVM","GridSearch":"True", "ParamsGrid":[{"C": [1, 10, 100, 1000], "kernel": ["rbf"]}],"Result":"None"}' http://localhost:5000/index
 
 
 def allowed_file(filename):
@@ -137,8 +123,14 @@ def index():
     return render_template('index.html')
 
 
+@app.route('/')
+def index2():
+    return render_template('testReactForm.html')
+
+
+# TODO create another route restful
 # define the route of the upload
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/f', methods=['GET', 'POST'])
 def upload_file():
     if request.method == 'POST':
         # check if the post request has the file part
@@ -158,5 +150,30 @@ def upload_file():
             return redirect(url_for('index'))
     return render_template('upload.html')
 
+
 # Load default config and override config from an environment variable
 app.config.from_envvar('INTERFACEML_SETTINGS', silent=True)
+
+
+
+# CHECK POST
+
+# check SVM
+# curl -i -H "Content-Type: application/json" -X POST -d '{"SVC": {"C": 1.0, "kernel": "rbf", "cache_size": 200, "tol": 0.001, "max_iter": -1, "class_weight": null, "shrinking": true, "degree": 3, "random_state": null, "coef0": 0.0, "decision_function_shape": null, "gamma": "auto", "probability": false, "verbose": false}}' http://localhost:5000/ScikitInfo
+
+# check randomforest
+# curl -i -H "Content-Type: application/json" -X POST -d '{"Clf":"RandomForestClassifier","Params":{"n_estimators":10},"Result":"None"}' http://localhost:5000/pokemon
+
+# check gridsearch svm
+# curl -i -H "Content-Type: application/json" -X POST -d '{"Clf":"SVM","GridSearch":"True", "ParamsGrid":[{"C": [1, 10, 100, 1000], "kernel": ["rbf"]}],"Result":"None"}' http://localhost:5000/index
+
+
+#
+#  from pprint import pprint
+#
+#  from numpydoc.docscrape import NumpyDocString
+# from sklearn.svm import SVC
+#
+#
+#  doc = NumpyDocString("    " + SVC.__doc__)  # hack
+#  pprint(doc['Parameters'])

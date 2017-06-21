@@ -1,6 +1,7 @@
 /**
  * Created by cyriljeanneret on 14.06.17.
 */
+
 class ButtonList extends React.Component {
     onClick(event) {
         window.addShape(event.target.id);
@@ -19,7 +20,7 @@ class ButtonList extends React.Component {
             <div className="collection">{rows}</div>
         );
     }
-}
+};
 
 window.shareRenderButtonList = function (tab) {
     ReactDOM.render(
@@ -30,56 +31,72 @@ window.shareRenderButtonList = function (tab) {
 
 // ------------------------------------------- Show Form ---------------------------------------
 
-class FormShape extends React.Component {
-    render() {
-        let dict = this.props.dict || {}
-        let label = Object.keys(dict).map(name => {
-                    return (
-                        <div>{name} : {dict[name]}</div>
-                    );
-            }
-        );
-        return (
-            <div>{label}</div>
-        );
-    }
-};
+// class FormShape extends React.Component {
+//     render() {
+//         let dict = this.props.dict || {}
+//         let label = Object.keys(dict).map(name => {
+//                     return (
+//                         <div>{name} : {dict[name]}</div>
+//                     );
+//             }
+//         );
+//         return (
+//             <div>{label}</div>
+//         );
+//     }
+// };
 
 
 //------------------------------------- LabelForm ---------------------------------------
-class LabelForForm extends React.Component {
+class Formul extends React.Component {
+    constructor(props) {
+        super(props);
+        // TODO CHANGE NULL VALUE BY " "
+        this.state = this.props.dict;
+        this.handleSubmit = this.handleSubmit.bind(this);
+        this.handleChange = this.handleChange.bind(this);
+    }
+
+    handleChange(event) {
+        this.setState({[event.target.name] : event.target.value});
+    }
+
+    handleSubmit(event) {
+        // TODO CALL FUNCTION INTO THE SHAPE TO REPLACE DICT SHAPE BY THIS STATE DICT
+        alert('A name was submitted: ' + this.state['C']);
+        event.preventDefault();
+    }
+
     render() {
         return (
-            <div>
-                <label for={this.props.forLabel}>{this.props.nameLabel}</label>
-                {this.props.children}
-            </div>
+            <form onSubmit={this.handleSubmit}>
+                {Object.keys(this.props.dict).map(name => {
+                return (
+                    <label> {name}
+                    <input type="text" name={name} value={this.state[name]} onChange={this.handleChange} placeholder={name}/>
+                    </label>
+                );
+            })}
+                <input type="submit" value="Submit"/>
+            </form>
         );
     }
-}
-;
-
-
-class inputForForm extends React.Component {
-    render() {
-        let t = this.props.t;
-        return (
-            <LabelForForm nameLabel={"hello"}>
-                <div>parent</div>
-            </LabelForForm>
-        );
-    };
-}
+};
 
 
 window.shareRenderFormShape = function (dictParamsClassifier) {
     ReactDOM.render(
-        <FormShape dict={dictParamsClassifier} />,
+        <Formul dict={dictParamsClassifier}/>,
         document.getElementById('formClassificator')
     );
 };
 
-
+window.shareRenderInitFormulaireShape = function () {
+    ReactDOM.render(
+        <div></div>,
+        document.getElementById('formClassificator')
+    );
+};
 // ------------------------ RENDER RETURN RESULT OF JSON -----------------------
 
 class ResultDiv extends React.Component {
@@ -96,7 +113,7 @@ class ResultDiv extends React.Component {
             <div>{result}</div>
         );
     }
-}
+};
 
 window.shareRenderResult = function (DictResultPost) {
 
