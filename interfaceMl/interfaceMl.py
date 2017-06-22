@@ -3,6 +3,7 @@ import os
 import pickle
 import traceback
 from pprint import pprint
+from sklearn import datasets
 from numpydoc.docscrape import NumpyDocString
 import interfaceMl.extractSqlToPickle
 from flask_restful import Resource, Api
@@ -33,12 +34,14 @@ ALLOWED_EXTENSIONS = set(['sqlite3'])
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
-with open('interfaceMl/DataSet/x_data_filtered.pickle', 'rb') as f:
-    x_data_filtered = pickle.load(f)
+# with open('interfaceMl/DataSet/x_data_filtered.pickle', 'rb') as f:
+#     x_data_filtered = pickle.load(f)
+#
+# with open('interfaceMl/DataSet/y_data_filtered.pickle', 'rb') as f:
+#     y_data_filtered = pickle.load(f)
 
-with open('interfaceMl/DataSet/y_data_filtered.pickle', 'rb') as f:
-    y_data_filtered = pickle.load(f)
-
+iris = datasets.load_iris()
+x_data_filtered, y_data_filtered = iris.data, iris.target
 # dictEstimator is to stock object class and name objet
 dictEstimator = {}
 
