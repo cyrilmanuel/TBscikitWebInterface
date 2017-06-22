@@ -1,11 +1,10 @@
+# -*- coding: utf-8 -*-
 # all the imports
 import os
-import pickle
 import traceback
-from pprint import pprint
 from sklearn import datasets
 from numpydoc.docscrape import NumpyDocString
-import interfaceMl.extractSqlToPickle
+#import interfaceMl.extractSqlToPickle
 from flask_restful import Resource, Api
 from sklearn.utils.testing import all_estimators
 from sklearn.model_selection import cross_val_score
@@ -13,25 +12,9 @@ from importlib import import_module
 from flask import Flask, request, redirect, url_for, \
     render_template, flash, jsonify
 
-# create the application instance :)
-app = Flask(__name__)
-# load config from this file
-app.config.from_object(__name__)
-
-app.config.update(dict(
-    SECRET_KEY='development key',
-    USERNAME='admin',
-    PASSWORD='test',
-    UPLOAD_FOLDER='interfaceMl/DataSet/',
-    ALLOWED_EXTENSIONS_UPLOAD=set(['sqlite3']),
-))
-
-api = Api(app)
-
 # TODO change all UPLOAD_FOLDER by app.config get
 UPLOAD_FOLDER = 'interfaceMl/DataSet/'
 ALLOWED_EXTENSIONS = set(['sqlite3'])
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
 # with open('interfaceMl/DataSet/x_data_filtered.pickle', 'rb') as f:
@@ -78,6 +61,7 @@ for name, class_ in all_estimators():
         doc = NumpyDocString("    " + dictEstimator[name].__doc__)  # hack
         print(doc['Parameters'])
 
+
 class UseScikit(Resource):
     def get(self):
         # return dictionnary {nameClassifier : {Params1:value1, Params2:value2}}
@@ -108,7 +92,7 @@ class UseScikit(Resource):
                     resultatform[k] = resultat
 
 
-                except Exception as e:
+                except Exception:
                     traceback.format_exc()
 
         # return all result processed
@@ -120,41 +104,60 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-# route to process Scikit-learn
-api.add_resource(UseScikit, '/backend')
+
+def create_app():
+    # create the application instance :)
+    app = Flask(__name__)
+    # load config from this file
+    app.config.from_object(__name__)
+
+    app.config.update(dict(
+        SECRET_KEY='development key',
+        USERNAME='admin',
+        PASSWORD='test',
+        UPLOAD_FOLDER='interfaceMl/DataSet/',
+        ALLOWED_EXTENSIONS_UPLOAD=set(['sqlite3']),
+    ))
+
+    api = Api(app)
+
+    app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+    # route to process Scikit-learn
+    api.add_resource(UseScikit, '/backend')
 
 
-# define the route of the index
-@app.route('/index')
-def index():
-    return render_template('index.html')
+    # define the route of the index
+    @app.route('/index')
+    def index():
+        return render_template('index.html')
 
-# TODO create another route restful
-# define the route of the upload
-@app.route('/f', methods=['GET', 'POST'])
-def upload_file():
-    if request.method == 'POST':
-        # check if the post request has the file part
-        if 'file' not in request.files:
-            flash('No file part')
-            return redirect(request.url)
-        file = request.files['file']
-        print(file)
-        # if user does not select file, browser also
-        # submit a empty part without filename
-        if file.filename == '':
-            flash('No selected file')
-            return redirect(request.url)
-        if file and allowed_file(file.filename):
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], "dbUpload.sqlite3"))
-            interfaceMl.extractSqlToPickle.process()
-            return redirect(url_for('index'))
-    return render_template('upload.html')
+    # TODO create another route restful
+    # define the route of the upload
+    @app.route('/f', methods=['GET', 'POST'])
+    def upload_file():
+        if request.method == 'POST':
+            # check if the post request has the file part
+            if 'file' not in request.files:
+                flash('No file part')
+                return redirect(request.url)
+            file = request.files['file']
+            print(file)
+            # if user does not select file, browser also
+            # submit a empty part without filename
+            if file.filename == '':
+                flash('No selected file')
+                return redirect(request.url)
+            if file and allowed_file(file.filename):
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], "dbUpload.sqlite3"))
+                interfaceMl.extractSqlToPickle.process()
+                return redirect(url_for('index'))
+        return render_template('upload.html')
 
+    # Load default config and override config from an environment variable
+    app.config.from_envvar('INTERFACEML_SETTINGS', silent=True)
 
-# Load default config and override config from an environment variable
-app.config.from_envvar('INTERFACEML_SETTINGS', silent=True)
-
+    return app
 
 
 # CHECK POST
