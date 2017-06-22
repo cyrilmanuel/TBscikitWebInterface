@@ -23,5 +23,6 @@ setup(
         'scipy',
         'six',
         'Werkzeug',
+        'numpydoc',
     ],
 )

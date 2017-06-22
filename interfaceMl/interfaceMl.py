@@ -2,7 +2,8 @@
 import os
 import pickle
 import traceback
-
+from pprint import pprint
+from numpydoc.docscrape import NumpyDocString
 import interfaceMl.extractSqlToPickle
 from flask_restful import Resource, Api
 from sklearn.utils.testing import all_estimators
@@ -30,6 +31,7 @@ api = Api(app)
 UPLOAD_FOLDER = 'interfaceMl/DataSet/'
 ALLOWED_EXTENSIONS = set(['sqlite3'])
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 
 with open('interfaceMl/DataSet/x_data_filtered.pickle', 'rb') as f:
     x_data_filtered = pickle.load(f)
@@ -68,8 +70,10 @@ for name, class_ in all_estimators():
 
         # stock the param of the classifier
         dictParamEstimator[name] = dictEstimator[name]().get_params()
-        for h, j in dictParamEstimator[name].items():
-            print('{0} : {1}'.format(h, type(j)))
+
+        # TODO CREATE DICT WITH PARAMS AND DESCRIPTION BY DOC
+        doc = NumpyDocString("    " + dictEstimator[name].__doc__)  # hack
+        print(doc['Parameters'])
 
 class UseScikit(Resource):
     def get(self):
@@ -166,14 +170,3 @@ app.config.from_envvar('INTERFACEML_SETTINGS', silent=True)
 
 # check gridsearch svm
 # curl -i -H "Content-Type: application/json" -X POST -d '{"Clf":"SVM","GridSearch":"True", "ParamsGrid":[{"C": [1, 10, 100, 1000], "kernel": ["rbf"]}],"Result":"None"}' http://localhost:5000/index
-
-
-#
-#  from pprint import pprint
-#
-#  from numpydoc.docscrape import NumpyDocString
-# from sklearn.svm import SVC
-#
-#
-#  doc = NumpyDocString("    " + SVC.__doc__)  # hack
-#  pprint(doc['Parameters'])

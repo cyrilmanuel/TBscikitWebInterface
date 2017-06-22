@@ -31,23 +31,6 @@ window.shareRenderButtonList = function (tab) {
 
 // ------------------------------------------- Show Form ---------------------------------------
 
-// class FormShape extends React.Component {
-//     render() {
-//         let dict = this.props.dict || {}
-//         let label = Object.keys(dict).map(name => {
-//                     return (
-//                         <div>{name} : {dict[name]}</div>
-//                     );
-//             }
-//         );
-//         return (
-//             <div>{label}</div>
-//         );
-//     }
-// };
-
-
-//------------------------------------- LabelForm ---------------------------------------
 class Formul extends React.Component {
     constructor(props) {
         super(props);
