@@ -129,12 +129,6 @@ api.add_resource(UseScikit, '/backend')
 def index():
     return render_template('index.html')
 
-
-@app.route('/')
-def index2():
-    return render_template('testReactForm.html')
-
-
 # TODO create another route restful
 # define the route of the upload
 @app.route('/f', methods=['GET', 'POST'])
