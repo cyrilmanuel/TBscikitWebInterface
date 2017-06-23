@@ -46,7 +46,7 @@ bower install
 
 Now, you can launch the server to start the website
 ```
-python app.py
+$ FLASK_APP=wsgi.py flask run
 ```
 
 open your browser to the localhost:5000
