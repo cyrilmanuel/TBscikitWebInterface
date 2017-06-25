@@ -1,20 +1,23 @@
 (function () {
 
     // constructor shape
-    function ShapeGenerator(name, sizeCanvas) {
+    function ShapeGenerator(nameOfficeID, nameClassifier, dictParamsClassifier, sizeCanvas) {
         this.Container_constructor();
         // stock the name of the classifier this shape will be repr
-        this.name = name;
+        this.name = nameOfficeID.toString();
+
         // stock the params of the classifier into the shape
         // because this shape can call the function to render
         // with React, a approprieted form
-        this.dicParams = getData()[this.name];
+        this.dicParamsClassifier = dictParamsClassifier;
+        this.nameClassifier = nameClassifier;
 
+        // size of canvas to psh on center
         this.sizeCanvas = sizeCanvas;
+
         // variable can toggle to know if user click the shape or move the shape.
         this.isStateClick = true;
 
-        this.isStateRemoveShape = false;
         this.setup();
     }
 
@@ -23,7 +26,7 @@
 
     // setup the shape
     p.setup = function () {
-        this.text = new createjs.Text(this.name, "20px Arial", "#000");
+        this.text = new createjs.Text(this.nameClassifier, "20px Arial", "#000");
         this.text.y = -7;
         this.text.textAlign = "center";
 
@@ -34,8 +37,6 @@
 
         // define function for interaction
         this.on("click", this.handleClick);
-        this.on("rollover", this.handleRollOver);
-        this.on("rollout", this.handleRollOver);
         this.on("pressup", this.handlePressUp);
         this.on("pressmove", this.handlePressMove);
 
@@ -53,12 +54,9 @@
 
     p.handleClick = function (event) {
         if (this.isStateClick) {
-            shareRenderFormShape(this.dicParams);
+            shareRenderInitFormulaireShape();
+            shareRenderFormShape(this.dicParamsClassifier, this.nameClassifier, this.name);
         }
-    };
-
-    p.handleRollOver = function (event) {
-        this.alpha = event.type == "rollover" ? 0.4 : 1;
     };
 
     p.handlePressUp = function (event) {
@@ -76,10 +74,16 @@
     // like this {name : {Params1:value1, Params2:value2}}
     p.getDataDict = function () {
         var temp = {};
-        temp[this.name] = this.dicParams;
+        temp[this.nameClassifier] = this.dicParamsClassifier;
         return temp;
+    };
+
+    p.updateDictData = function (dictParamsClassifier) {
+        this.dicParamsClassifier = dictParamsClassifier;
     }
+
     p.resetPositionShape = function () {
+
         this.x = this.sizeCanvas["width"] / 2;
         this.y = this.sizeCanvas["height"] / 2;
     }

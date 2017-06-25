@@ -3,7 +3,6 @@
 <head>
     <title>Index</title>
     <meta charset="utf-8">
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
     <script src="{{ url_for('static', filename='node_modules/jquery/dist/jquery.js') }}"></script>
     <script src="{{ url_for('static', filename='node_modules/react/dist/react.js') }}"></script>
@@ -15,7 +14,6 @@
     <link rel="shortcut icon" href="">
     <link rel="stylesheet" href="{{ url_for('static', filename='node_modules/materialize-css/bin/materialize.css') }}">
     <script src="{{ url_for('static', filename='node_modules/materialize-css/bin/materialize.js') }}"></script>
-
 </head>
 
 <body onload="init();">
@@ -54,82 +52,54 @@
     </div>
 </div>
 <script>
-    // create tab container of shape
-    var listShapeOnCanvas = [];
-    // create tab contain all name of classifier
-    var listOfAllNameClassifier = [];
-    // dictionnary contain return request get (all classifier and params)
-    var dictAllClassificator = {};
-
-    // fonction contain all classifier and params
-    window.getData = function () {
-        return dictAllClassificator;
-    };
 
     // --------------------------------- initialisation of the canvas --------------
     function init() {
+        var idShape = 0;
         // -------------------------- request Get in ajax ------------
-        $.getJSON("backend", function success(data) {
-                dictAllClassificator = data;
-
-                for (var key in data) {
-                    listOfAllNameClassifier.push(key);
-                }
+        $.getJSON("backend", function success(dictDataReceive) {
                 // generate button list with all name classifier
-                shareRenderButtonList(listOfAllNameClassifier, data);
+                shareRenderButtonList(dictDataReceive);
             }
         );
 
         // --------------------------------- init canvas ---------------------
         var stage = new createjs.Stage("demoCanvas");
         createjs.Ticker.addEventListener("tick", handleTick);
-        // add trash
-        var sizeCanvas = {"width": stage.canvas.width, "height": stage.canvas.height};
-        var temp = new TrashGenerator("poubelle", sizeCanvas);
-        stage.addChild(temp);
-        listShapeOnCanvas.push(temp);
 
         function handleTick(event) {
-            for (var i in listShapeOnCanvas) {
-                var pt = listShapeOnCanvas[i].localToLocal(100, 0, listShapeOnCanvas[0]);
-                if (listShapeOnCanvas[0].hitTest(pt.x, pt.y)) {
-                    removeShape(i);
-                }
                 stage.update();
-            }
         };
 
         // ------------------------- func global for add shape to stage ---------------------
-        window.addShape = function (name) {
+        window.addShape = function (nameClassifier, dictParamsClassifier) {
             var sizeCanvas = {"width": stage.canvas.width, "height": stage.canvas.height};
-            var temp = new ShapeGenerator(name, sizeCanvas);
-            stage.addChild(temp);
-            listShapeOnCanvas.push(temp);
+            var shapeTemp = new ShapeGenerator(idShape.toString(), nameClassifier, dictParamsClassifier, sizeCanvas);
+            stage.addChild(shapeTemp);
+            idShape++;
         };
 
+        window.removeShape = function (idShape) {
+            stage.removeChild(stage.getChildByName(idShape));
+            shareRenderInitFormulaireShape();
+        };
+
+        window.updateShapeParam =function (idShape, dictParams) {
+            stage.getChildByName(idShape).updateDictData(dictParams);
+        };
+
+        window.removeAllChildren = function () {
+            stage.removeAllChildren();
+        };
         // -------------------------- return request --------------
         window.getDFS = function () {
             var res = {};
             //parcour all shape on canvas and return a dict
             // like this {id : {name : {params classifier}} }
-            for (var indexShape in listShapeOnCanvas) {
-                if (indexShape != 0) {
-                    res[indexShape] = listShapeOnCanvas[indexShape].getDataDict();
-                }
+            for (var indexShape in stage.children) {
+                    res[stage.children[indexShape].name] = stage.children[indexShape].getDataDict();
             }
             return res;
-        };
-
-        window.removeShape = function (idShape) {
-            // TODO remove the shape by id
-            if (confirm('Are you sure you want to remove the shape '+ idShape +'?')) {
-                stage.removeChild(listShapeOnCanvas[idShape]);
-            listShapeOnCanvas.splice(idShape, 1);
-            shareRenderInitFormulaireShape();
-            } else {
-                listShapeOnCanvas[idShape].resetPositionShape();
-            }
-
         };
     }
     (jQuery);
@@ -140,7 +110,7 @@
         function processForm(e) {
             // recup all value to push on backend
             var dataToSend = window.getDFS();
-
+            console.log(dataToSend);
             // ajax POST
             $.ajax({
                 url: 'backend',
@@ -159,7 +129,6 @@
 
             e.preventDefault();
         }
-
         $('#my-form').submit(processForm);
     })(jQuery);
 

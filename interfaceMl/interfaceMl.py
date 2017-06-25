@@ -2,9 +2,10 @@
 # all the imports
 import os
 import traceback
+import pickle
 from sklearn import datasets
 from numpydoc.docscrape import NumpyDocString
-#import interfaceMl.extractSqlToPickle
+import interfaceMl.extractSqlToPickle
 from flask_restful import Resource, Api
 from sklearn.utils.testing import all_estimators
 from sklearn.model_selection import cross_val_score
@@ -13,18 +14,14 @@ from flask import Flask, request, redirect, url_for, \
     render_template, flash, jsonify
 
 # TODO change all UPLOAD_FOLDER by app.config get
-UPLOAD_FOLDER = 'interfaceMl/DataSet/'
-ALLOWED_EXTENSIONS = set(['sqlite3'])
+with open('interfaceMl/DataSet/x_data_filtered.pickle', 'rb') as f:
+    x_data_filtered = pickle.load(f)
 
+with open('interfaceMl/DataSet/y_data_filtered.pickle', 'rb') as f:
+    y_data_filtered = pickle.load(f)
 
-# with open('interfaceMl/DataSet/x_data_filtered.pickle', 'rb') as f:
-#     x_data_filtered = pickle.load(f)
-#
-# with open('interfaceMl/DataSet/y_data_filtered.pickle', 'rb') as f:
-#     y_data_filtered = pickle.load(f)
-
-iris = datasets.load_iris()
-x_data_filtered, y_data_filtered = iris.data, iris.target
+# iris = datasets.load_iris()
+# x_data_filtered, y_data_filtered = iris.data, iris.target
 # dictEstimator is to stock object class and name objet
 dictEstimator = {}
 
@@ -36,10 +33,6 @@ listProcess = [
 ]
 
 for name, class_ in all_estimators():
-
-    # prin if is a classifier, a regression or none
-    # print(getattr(class_, "_estimator_type", None))
-
     if "_" not in name and str(getattr(class_, "_estimator_type", None)) == "classifier":
 
         # recup the module name and path of scikit
@@ -101,8 +94,7 @@ class UseScikit(Resource):
 
 def allowed_file(filename):
     return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
+           filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS_UPLOAD']
 
 
 def create_app():
@@ -121,11 +113,13 @@ def create_app():
 
     api = Api(app)
 
-    app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
     # route to process Scikit-learn
     api.add_resource(UseScikit, '/backend')
 
+    # define the route of the index
+    @app.route('/')
+    def test():
+        return render_template('multipleAjaxTest.html')
 
     # define the route of the index
     @app.route('/index')
@@ -149,8 +143,10 @@ def create_app():
                 flash('No selected file')
                 return redirect(request.url)
             if file and allowed_file(file.filename):
+                print(os.path.abspath('.'))
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], "dbUpload.sqlite3"))
                 interfaceMl.extractSqlToPickle.process()
+
                 return redirect(url_for('index'))
         return render_template('upload.html')
 
