@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 # all the imports
-import os
-import traceback
-import pickle
-import ast
-import re
+
+import pickle, re, traceback, os
 from sklearn import datasets
+from ast import literal_eval
 from numpydoc.docscrape import NumpyDocString
 import interfaceMl.extractSqlToPickle
 from flask_restful import Resource, Api
@@ -36,11 +34,9 @@ listProcess = [
 ]
 
 
-
 def getDicoParams(instanceClassifier):
-
-    default_re = re.compile(r'\bdefault\s*[=:]\s*(?P<default>[^\)\b]+)')
-    types_re = re.compile(r"(?P<type>(float|int(eger)?|str(ing)?|bool(ean)?|dict|))")
+    dico = {}
+    types_re = re.compile(r"(?P<type>(float|int(eger)?|str(ing)?|bool(ean)?))")
 
     type_map = {
         'string': str,
@@ -52,18 +48,13 @@ def getDicoParams(instanceClassifier):
         'float': float,
         'dict': dict,
     }
+
+    temp = instanceClassifier().get_params()
     doc = NumpyDocString("    " + instanceClassifier.__doc__)  # hack
-    dico = {}
-    for name2, type_, descriptions in doc['Parameters']:
-
-        match = types_re.finditer(type_)
-        types = (t.group('type') for t in match)
-
-        types = [type_map.get(t, t) for t in types]
-
-        match = default_re.search(type_)
-        dico[name2] = types[0]
-        # print(name, types, default)
+    for name, type_, descriptions in doc['Parameters']:
+        types = types_re.match(type_)
+        if types != None:
+            dico[name] = (type_map.get(types.group()), temp[name])
     return dico
 
 
@@ -82,18 +73,15 @@ for name, class_ in all_estimators():
             # great, let's push them
             dictEstimator[name] = getattr(import_module(modulePath), name)
 
-        # stock the param of the classifier
-        dictParamEstimator[name] = dictEstimator[name]().get_params()
-
-        # TODO CREATE DICT WITH PARAMS AND DESCRIPTION BY DOC
         dictTypeEstimator[name] = getDicoParams(dictEstimator[name])
+        # stock the param of the classifier
+        dictParamEstimator[name] = {key: v[1] for key, v in dictTypeEstimator[name].items()}
+
 
 class UseScikit2(Resource):
     def get(self):
         # return dictionnary {nameClassifier : {Params1:value1, Params2:value2}}
-        print(dictTypeEstimator['SVC'])
         return jsonify(2)
-
 
 
 class UseScikit(Resource):
@@ -111,18 +99,18 @@ class UseScikit(Resource):
             for key, value in v.items():
 
                 newValue = {}
-                # TODO CONVERT DATA
                 for nameparams, valueParams, in value.items():
-                    print('params {0} type {1}'.format(valueParams, type(valueParams)))
-
                     # check if data diff to défault data
                     if valueParams == "":
                         print('value empty replaced by default')
                         newValue[nameparams] = dictParamEstimator[key][nameparams]
                     elif valueParams != dictParamEstimator[key][nameparams]:
                         print('value not empty and not equal to default. change type to type in docstring')
-                        newValue[nameparams] = dictTypeEstimator[key][nameparams](valueParams)
+                        valueConverted = literal_eval(valueParams)
+                        print('value convert ast = {0}'.format(valueConverted))
+                        newValue[nameparams] = dictTypeEstimator[key][nameparams][0](valueConverted)
 
+                        print('valeur convert selons dico type= {0}'.format(newValue[nameparams]))
                 try:
                     # create the classificator
                     clf = dictEstimator[key]()
@@ -209,7 +197,6 @@ def create_app():
     app.config.from_envvar('INTERFACEML_SETTINGS', silent=True)
 
     return app
-
 
 # CHECK POST
 

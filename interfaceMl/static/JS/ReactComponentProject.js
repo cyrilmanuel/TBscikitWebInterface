@@ -1,9 +1,9 @@
 /**
  * Created by cyriljeanneret on 14.06.17.
-*/
+ */
 
 class ButtonList extends React.Component {
-     constructor(props) {
+    constructor(props) {
         super(props);
         this.dataClassifier = this.props.dataClassifier;
         this.onClick = this.onClick.bind(this);
@@ -15,16 +15,17 @@ class ButtonList extends React.Component {
 
     render() {
         let rows = Object.keys(this.dataClassifier).map(name => {
-                 return (
-                    <a className="collection-item" onClick={this.onClick} id={name}
-                        key={name}>{name}</a>
-                );
+            return (
+                <a className="collection-item" onClick={this.onClick} id={name}
+                   key={name}>{name}</a>
+            );
         });
         return (
             <div className="collection">{rows}</div>
         );
     }
-};
+}
+;
 
 window.shareRenderButtonList = function (dataClassifier) {
     ReactDOM.render(
@@ -47,7 +48,7 @@ class Formul extends React.Component {
     }
 
     handleChange(event) {
-        this.setState({[event.target.name] : event.target.value});
+        this.setState({[event.target.name]: event.target.value});
     }
 
     handleReset(event) {
@@ -55,36 +56,48 @@ class Formul extends React.Component {
     }
 
     handleSubmit(event) {
-        if(event.target.name == 'Delete'){
-            if (confirm('Are you sure you want to remove the shape '+ this.name +'?')) {
+        if (event.target.name == 'Delete') {
+            if (confirm('Are you sure you want to remove the shape ' + this.name + '?')) {
                 window.removeShape(this.idShape);
-                Materialize.toast(this.name +' removed !', 2000, 'rounded');
+                Materialize.toast(this.name + ' removed !', 2000, 'rounded');
             }
-        }else{
-            // TODO CALL FUNCTION INTO THE SHAPE TO REPLACE DICT SHAPE BY THIS STATE DICT
+        } else {
+            for( var valueTemp in this.state){
+                if(this.state[valueTemp] == ""){
+                    this.setState({[valueTemp]:this.props.dict[valueTemp]});
+                }
+            }
             window.updateShapeParam(this.idShape, this.state);
-            Materialize.toast('Updated parameters of '+this.name, 2000, 'rounded');
+            Materialize.toast('Updated parameters of ' + this.name, 2000, 'rounded');
         }
         event.preventDefault();
     }
+
     render() {
         return (
             <form key="formParams">
                 <div className="row">
-                     <a className="waves-effect waves-light btn" name="Send" onClick={this.handleSubmit} key="Send">Submit</a>
-                <a className="waves-effect waves-light btn" name="Delete" onClick={this.handleSubmit} key="Delete">Delete Shape</a>
+                    <div className="col s6">
+                        <a className="waves-effect waves-light btn" name="Send" onClick={this.handleSubmit} key="Send">Submit</a>
+                    </div>
+                    <div className="col s6">
+                        <a className="waves-effect waves-light btn" name="Delete" onClick={this.handleSubmit}
+                           key="Delete">Delete Shape</a>
+                    </div>
                 </div>
                 {Object.keys(this.state).map(name => {
-                return (
-                    <label key={'label'+name}> {name}
-                    <input type="text" name={name} value={this.state[name]} onChange={this.handleChange} placeholder={name} key={name}/>
-                    </label>
-                );
-            })}
+                    return (
+                        <label key={'label' + name}> {name}
+                            <input type="text" name={name} value={this.state[name]} onChange={this.handleChange}
+                                   placeholder={this.state[name]} key={name}/>
+                        </label>
+                    );
+                })}
             </form>
         );
     }
-};
+}
+;
 
 
 window.shareRenderFormShape = function (dictParamsClassifier, nameClassifier, idShape) {
@@ -107,7 +120,7 @@ class ResultDiv extends React.Component {
         let dict = this.props.dict || {};
         let result = Object.keys(dict).map(name => {
                 return (
-                    <div>id of the shape = {name}  {dict[name]}
+                    <div>id of the shape = {name} {dict[name]}
                     </div>
                 );
             }
@@ -116,7 +129,8 @@ class ResultDiv extends React.Component {
             <div>{result}</div>
         );
     }
-};
+}
+;
 
 window.shareRenderResult = function (DictResultPost) {
 
