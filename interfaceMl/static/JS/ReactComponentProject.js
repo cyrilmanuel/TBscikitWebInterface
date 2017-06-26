@@ -70,6 +70,10 @@ class Formul extends React.Component {
     render() {
         return (
             <form key="formParams">
+                <div className="row">
+                     <a className="waves-effect waves-light btn" name="Send" onClick={this.handleSubmit} key="Send">Submit</a>
+                <a className="waves-effect waves-light btn" name="Delete" onClick={this.handleSubmit} key="Delete">Delete Shape</a>
+                </div>
                 {Object.keys(this.state).map(name => {
                 return (
                     <label key={'label'+name}> {name}
@@ -77,8 +81,6 @@ class Formul extends React.Component {
                     </label>
                 );
             })}
-                <a className="waves-effect waves-light btn" name="Send" onClick={this.handleSubmit} key="Send">Submit</a>
-                <a className="waves-effect waves-light btn" name="Delete" onClick={this.handleSubmit} key="Delete">Delete Shape</a>
             </form>
         );
     }

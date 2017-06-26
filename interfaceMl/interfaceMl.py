@@ -3,6 +3,8 @@
 import os
 import traceback
 import pickle
+import ast
+import re
 from sklearn import datasets
 from numpydoc.docscrape import NumpyDocString
 import interfaceMl.extractSqlToPickle
@@ -23,6 +25,7 @@ with open('interfaceMl/DataSet/y_data_filtered.pickle', 'rb') as f:
 # iris = datasets.load_iris()
 # x_data_filtered, y_data_filtered = iris.data, iris.target
 # dictEstimator is to stock object class and name objet
+dictTypeEstimator = {}
 dictEstimator = {}
 
 # to store params estimator and name
@@ -31,6 +34,38 @@ dictParamEstimator = {}
 # list object receive by post
 listProcess = [
 ]
+
+
+
+def getDicoParams(instanceClassifier):
+
+    default_re = re.compile(r'\bdefault\s*[=:]\s*(?P<default>[^\)\b]+)')
+    types_re = re.compile(r"(?P<type>(float|int(eger)?|str(ing)?|bool(ean)?|dict|))")
+
+    type_map = {
+        'string': str,
+        'str': str,
+        'boolean': bool,
+        'bool': bool,
+        'int': int,
+        'integer': int,
+        'float': float,
+        'dict': dict,
+    }
+    doc = NumpyDocString("    " + instanceClassifier.__doc__)  # hack
+    dico = {}
+    for name2, type_, descriptions in doc['Parameters']:
+
+        match = types_re.finditer(type_)
+        types = (t.group('type') for t in match)
+
+        types = [type_map.get(t, t) for t in types]
+
+        match = default_re.search(type_)
+        dico[name2] = types[0]
+        # print(name, types, default)
+    return dico
+
 
 for name, class_ in all_estimators():
     if "_" not in name and str(getattr(class_, "_estimator_type", None)) == "classifier":
@@ -51,8 +86,14 @@ for name, class_ in all_estimators():
         dictParamEstimator[name] = dictEstimator[name]().get_params()
 
         # TODO CREATE DICT WITH PARAMS AND DESCRIPTION BY DOC
-        doc = NumpyDocString("    " + dictEstimator[name].__doc__)  # hack
-        print(doc['Parameters'])
+        dictTypeEstimator[name] = getDicoParams(dictEstimator[name])
+
+class UseScikit2(Resource):
+    def get(self):
+        # return dictionnary {nameClassifier : {Params1:value1, Params2:value2}}
+        print(dictTypeEstimator['SVC'])
+        return jsonify(2)
+
 
 
 class UseScikit(Resource):
@@ -61,7 +102,6 @@ class UseScikit(Resource):
         return jsonify(dictParamEstimator)
 
     def post(self):
-
         # checker si les objets sont dans la liste et ne pas
         # faire de calcul si il y sont. juste retourner la réponse
         listProcess.clear()
@@ -69,11 +109,25 @@ class UseScikit(Resource):
         resultatform = {}
         for k, v in receive_json.items():
             for key, value in v.items():
+
+                newValue = {}
+                # TODO CONVERT DATA
+                for nameparams, valueParams, in value.items():
+                    print('params {0} type {1}'.format(valueParams, type(valueParams)))
+
+                    # check if data diff to défault data
+                    if valueParams == "":
+                        print('value empty replaced by default')
+                        newValue[nameparams] = dictParamEstimator[key][nameparams]
+                    elif valueParams != dictParamEstimator[key][nameparams]:
+                        print('value not empty and not equal to default. change type to type in docstring')
+                        newValue[nameparams] = dictTypeEstimator[key][nameparams](valueParams)
+
                 try:
                     # create the classificator
                     clf = dictEstimator[key]()
                     # send params issue by the request
-                    clf.set_params(**value)
+                    clf.set_params(**newValue)
 
                     # évaluate the scoring
                     scores = cross_val_score(clf, x_data_filtered, y_data_filtered, cv=3)
@@ -83,7 +137,6 @@ class UseScikit(Resource):
 
                     # stock for the id of the shape, the result (dict form { idShape : resultat}
                     resultatform[k] = resultat
-
 
                 except Exception:
                     traceback.format_exc()
@@ -115,6 +168,8 @@ def create_app():
 
     # route to process Scikit-learn
     api.add_resource(UseScikit, '/backend')
+    # route to process Scikit-learn
+    api.add_resource(UseScikit2, '/backend2')
 
     # define the route of the index
     @app.route('/')

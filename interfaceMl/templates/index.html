@@ -52,7 +52,7 @@
     </div>
 </div>
 <script>
-
+    var dict = {}
     // --------------------------------- initialisation of the canvas --------------
     function init() {
         var idShape = 0;
@@ -60,6 +60,14 @@
         $.getJSON("backend", function success(dictDataReceive) {
                 // generate button list with all name classifier
                 shareRenderButtonList(dictDataReceive);
+                console.log(dictDataReceive['SVC']);
+            }
+        );
+
+         $.getJSON("backend2", function success(dictDataReceive) {
+                // generate button list with all name classifier
+               dict = dictDataReceive;
+                console.log(dictDataReceive['SVC']);
             }
         );
 
