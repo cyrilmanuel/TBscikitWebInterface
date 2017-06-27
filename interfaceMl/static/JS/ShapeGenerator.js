@@ -80,13 +80,13 @@
 
     p.updateDictData = function (dictParamsClassifier) {
         this.dicParamsClassifier = dictParamsClassifier;
-    }
+    };
 
     p.resetPositionShape = function () {
 
         this.x = this.sizeCanvas["width"] / 2;
         this.y = this.sizeCanvas["height"] / 2;
-    }
+    };
     // create window function. when, i can create shape in a script on the page index.html
     window.ShapeGenerator = createjs.promote(ShapeGenerator, "Container");
 }());

@@ -42,34 +42,22 @@ class Formul extends React.Component {
         this.name = this.props.name;
         this.idShape = this.props.idShape;
         this.state = this.props.dict; // trick replace state dict by dict params clasifier
-        this.handleSubmit = this.handleSubmit.bind(this);
+        this.handleDelete = this.handleDelete.bind(this);
         this.handleChange = this.handleChange.bind(this);
-        this.handleReset = this.handleReset.bind(this);
     }
 
     handleChange(event) {
         this.setState({[event.target.name]: event.target.value});
+        window.updateShapeParam(this.idShape, this.state);
+        Materialize.toast('Updated parameters of ' + this.name, 2000, 'rounded');
     }
 
-    handleReset(event) {
-        this.state = this.props.dict;
-    }
-
-    handleSubmit(event) {
-        if (event.target.name == 'Delete') {
-            if (confirm('Are you sure you want to remove the shape ' + this.name + '?')) {
-                window.removeShape(this.idShape);
-                Materialize.toast(this.name + ' removed !', 2000, 'rounded');
-            }
-        } else {
-            for( var valueTemp in this.state){
-                if(this.state[valueTemp] == ""){
-                    this.setState({[valueTemp]:this.props.dict[valueTemp]});
-                }
-            }
-            window.updateShapeParam(this.idShape, this.state);
-            Materialize.toast('Updated parameters of ' + this.name, 2000, 'rounded');
+    handleDelete(event) {
+        if (confirm('Are you sure you want to remove the shape ' + this.name + '?')) {
+            window.removeShape(this.idShape);
+            Materialize.toast(this.name + ' removed !', 2000, 'rounded');
         }
+
         event.preventDefault();
     }
 
@@ -77,11 +65,8 @@ class Formul extends React.Component {
         return (
             <form key="formParams">
                 <div className="row">
-                    <div className="col s6">
-                        <a className="waves-effect waves-light btn" name="Send" onClick={this.handleSubmit} key="Send">Submit</a>
-                    </div>
-                    <div className="col s6">
-                        <a className="waves-effect waves-light btn" name="Delete" onClick={this.handleSubmit}
+                    <div className="col s12">
+                        <a className="waves-effect waves-light btn" name="Delete" onClick={this.handleDelete}
                            key="Delete">Delete Shape</a>
                     </div>
                 </div>
@@ -120,13 +105,13 @@ class ResultDiv extends React.Component {
         let dict = this.props.dict || {};
         let result = Object.keys(dict).map(name => {
                 return (
-                    <div>id of the shape = {name} {dict[name]}
+                    <div key={name}>id of the shape = {name} {dict[name]}
                     </div>
                 );
             }
         );
         return (
-            <div>{result}</div>
+            <div key={2}>{result}</div>
         );
     }
 }

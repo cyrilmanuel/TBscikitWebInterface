@@ -37,7 +37,6 @@ listProcess = [
 def getDicoParams(instanceClassifier):
     dico = {}
     types_re = re.compile(r"(?P<type>(float|int(eger)?|str(ing)?|bool(ean)?))")
-
     type_map = {
         'string': str,
         'str': str,
@@ -48,13 +47,12 @@ def getDicoParams(instanceClassifier):
         'float': float,
         'dict': dict,
     }
-
     temp = instanceClassifier().get_params()
     doc = NumpyDocString("    " + instanceClassifier.__doc__)  # hack
     for name, type_, descriptions in doc['Parameters']:
         types = types_re.match(type_)
         if types != None:
-            dico[name] = (type_map.get(types.group()), temp[name])
+            dico[name] = (type_map.get(types.group()), temp[name], descriptions)
     return dico
 
 
@@ -101,6 +99,7 @@ class UseScikit(Resource):
                 newValue = {}
                 for nameparams, valueParams, in value.items():
                     # check if data diff to défault data
+                    print(valueParams)
                     if valueParams == "":
                         print('value empty replaced by default')
                         newValue[nameparams] = dictParamEstimator[key][nameparams]
@@ -109,7 +108,6 @@ class UseScikit(Resource):
                         valueConverted = literal_eval(valueParams)
                         print('value convert ast = {0}'.format(valueConverted))
                         newValue[nameparams] = dictTypeEstimator[key][nameparams][0](valueConverted)
-
                         print('valeur convert selons dico type= {0}'.format(newValue[nameparams]))
                 try:
                     # create the classificator
@@ -131,12 +129,6 @@ class UseScikit(Resource):
 
         # return all result processed
         return jsonify(resultatform)
-
-
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS_UPLOAD']
-
 
 def create_app():
     # create the application instance :)
@@ -169,7 +161,10 @@ def create_app():
     def index():
         return render_template('index.html')
 
-    # TODO create another route restful
+    def allowed_file(filename):
+        return '.' in filename and \
+               filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS_UPLOAD']
+
     # define the route of the upload
     @app.route('/f', methods=['GET', 'POST'])
     def upload_file():

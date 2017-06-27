@@ -10,7 +10,6 @@
     <script src="{{ url_for('static', filename='node_modules/createjs-module/vendor_modules/EaselJS-0.8.2/lib/easeljs-0.8.2.min.js') }}"></script>
     <script type="text/babel" src="{{ url_for('static', filename='JS/ReactComponentProject.js') }}"></script>
     <script src="{{ url_for('static', filename='JS/ShapeGenerator.js') }}"></script>
-    <script src="{{ url_for('static', filename='JS/TrashGenerator.js') }}"></script>
     <link rel="shortcut icon" href="">
     <link rel="stylesheet" href="{{ url_for('static', filename='node_modules/materialize-css/bin/materialize.css') }}">
     <script src="{{ url_for('static', filename='node_modules/materialize-css/bin/materialize.js') }}"></script>
@@ -32,6 +31,21 @@
             <form id="my-form" class="col s12 center-align">
                 <button class="btn" type="submit">Process</button>
             </form>
+            <a class="waves-effect waves-light btn" onclick="{$('#modal1').modal().modal('open')}">Reset canvas</a>
+            <!-- Modal Structure -->
+            <div id="modal1" class="modal">
+                <div class="modal-content">
+                    <h4>Delete all classificators !</h4>
+                    <p>are you sure to want to delete all classificators into the canvas ?</p>
+                </div>
+                <div class="modal-footer">
+                    <a onclick="{removeAllChildren()}"
+                       class="modal-action modal-close waves-effect waves-green btn-flat">Agree</a>
+                     <a onclick="{$('#modal1').modal('close')}"
+                       class="modal-action modal-close waves-effect waves-green btn-flat">Disagree</a>
+                </div>
+            </div>
+
         </div>
         <div class="row">
             <div id="response" class="col s12 center-align">
@@ -40,19 +54,40 @@
         </div>
     </div>
     <div class="col s3">
-        <div class="row">
-
-        </div>
         <div class="row center-align">
             <div id="formClassificator">
                 <!-- RENDER FORM PARAMETERS FOR SHAPE CLASSIFIER BY REACT -->
             </div>
         </div>
-
     </div>
 </div>
 <script>
     var dict = {}
+    var Colors = {
+        aqua: "#00ffff",
+        azure: "#f0ffff",
+        beige: "#f5f5dc",
+        blue: "#0000ff",
+        brown: "#a52a2a",
+        cyan: "#00ffff",
+        fuchsia: "#ff00ff",
+        gold: "#ffd700",
+        green: "#008000",
+        khaki: "#f0e68c",
+        lightblue: "#add8e6",
+        lightcyan: "#e0ffff",
+        lightgreen: "#90ee90",
+        lightgrey: "#d3d3d3",
+        lightpink: "#ffb6c1",
+        lightyellow: "#ffffe0",
+        lime: "#00ff00",
+        orange: "#ffa500",
+        pink: "#ffc0cb",
+        red: "#ff0000",
+        silver: "#c0c0c0",
+        white: "#ffffff",
+        yellow: "#ffff00"
+    };
     // --------------------------------- initialisation of the canvas --------------
     function init() {
         var idShape = 0;
@@ -60,14 +95,6 @@
         $.getJSON("backend", function success(dictDataReceive) {
                 // generate button list with all name classifier
                 shareRenderButtonList(dictDataReceive);
-                console.log(dictDataReceive['SVC']);
-            }
-        );
-
-         $.getJSON("backend2", function success(dictDataReceive) {
-                // generate button list with all name classifier
-               dict = dictDataReceive;
-                console.log(dictDataReceive['SVC']);
             }
         );
 
@@ -76,7 +103,7 @@
         createjs.Ticker.addEventListener("tick", handleTick);
 
         function handleTick(event) {
-                stage.update();
+            stage.update();
         };
 
         // ------------------------- func global for add shape to stage ---------------------
@@ -92,12 +119,14 @@
             shareRenderInitFormulaireShape();
         };
 
-        window.updateShapeParam =function (idShape, dictParams) {
+        window.updateShapeParam = function (idShape, dictParams) {
             stage.getChildByName(idShape).updateDictData(dictParams);
         };
 
         window.removeAllChildren = function () {
             stage.removeAllChildren();
+            shareRenderInitFormulaireShape();
+            Materialize.toast('new empty canvas !', 2000, 'rounded');
         };
         // -------------------------- return request --------------
         window.getDFS = function () {
@@ -105,7 +134,7 @@
             //parcour all shape on canvas and return a dict
             // like this {id : {name : {params classifier}} }
             for (var indexShape in stage.children) {
-                    res[stage.children[indexShape].name] = stage.children[indexShape].getDataDict();
+                res[stage.children[indexShape].name] = stage.children[indexShape].getDataDict();
             }
             return res;
         };
@@ -137,8 +166,10 @@
 
             e.preventDefault();
         }
+
         $('#my-form').submit(processForm);
     })(jQuery);
+
 
 </script>
 </body>
