@@ -17,7 +17,6 @@
 
         // variable can toggle to know if user click the shape or move the shape.
         this.isStateClick = true;
-
         this.setup();
     }
 
@@ -26,14 +25,17 @@
 
     // setup the shape
     p.setup = function () {
-        this.text = new createjs.Text(this.nameClassifier, "20px Arial", "#000");
-        this.text.y = -7;
-        this.text.textAlign = "center";
+        var text = new createjs.Text(this.nameClassifier.replace(/([A-Z])/g, ' $1').trim(), "20px Arial", "#000");
+        text.textAlign = "center";
+        text.maxWidth = 100;
+        text.lineWidth=100;
+         text.y = -1 * text.getMeasuredHeight()/2;
 
         var background = new createjs.Shape();
-        var color = '#' + (0x1000000 + (Math.random()) * 0xffffff).toString(16).substr(1, 6);
+        // var color = '#' + (0x1000000 + (Math.random()) * 0xffffff).toString(16).substr(1, 6);
+        var color = '#fff700';
         background.graphics.beginFill(color).drawCircle(0, 0, 50);
-        this.addChild(background, this.text);
+        this.addChild(background, text);
 
         // define function for interaction
         this.on("click", this.handleClick);
@@ -43,6 +45,7 @@
         // define the type of cursor
         this.cursor = "arrow";
 
+        // with this shit
         this.mouseChildren = false;
 
         this.offset = Math.random() * 10;

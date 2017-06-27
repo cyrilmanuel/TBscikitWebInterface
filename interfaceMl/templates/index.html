@@ -25,26 +25,35 @@
         </div>
     </div>
     <div class="col s6">
+        <div class="row">
+            test
+        </div>
         <canvas id="demoCanvas" width="600" height="600"
                 style="border: 1px solid black; width: 100%; height: 100% "></canvas>
         <div class="row">
             <form id="my-form" class="col s12 center-align">
-                <button class="btn" type="submit">Process</button>
+                <div class="col s6">
+                    <a class="waves-effect waves-light btn" onclick="{$('#modal1').modal().modal('open')}">Reset
+                        canvas</a>
+                    <!-- Modal Structure -->
+                    <div id="modal1" class="modal">
+                        <div class="modal-content">
+                            <h4>Delete all classificators !</h4>
+                            <p>are you sure to want to delete all classificators into the canvas ?</p>
+                        </div>
+                        <div class="modal-footer">
+                            <a onclick="{removeAllChildren()}"
+                               class="modal-action modal-close waves-effect waves-green btn-flat">Agree</a>
+                            <a onclick="{$('#modal1').modal('close')}"
+                               class="modal-action modal-close waves-effect waves-green btn-flat">Disagree</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col s6">
+                    <button class="btn" type="submit">Process</button>
+                </div>
             </form>
-            <a class="waves-effect waves-light btn" onclick="{$('#modal1').modal().modal('open')}">Reset canvas</a>
-            <!-- Modal Structure -->
-            <div id="modal1" class="modal">
-                <div class="modal-content">
-                    <h4>Delete all classificators !</h4>
-                    <p>are you sure to want to delete all classificators into the canvas ?</p>
-                </div>
-                <div class="modal-footer">
-                    <a onclick="{removeAllChildren()}"
-                       class="modal-action modal-close waves-effect waves-green btn-flat">Agree</a>
-                     <a onclick="{$('#modal1').modal('close')}"
-                       class="modal-action modal-close waves-effect waves-green btn-flat">Disagree</a>
-                </div>
-            </div>
+
 
         </div>
         <div class="row">
@@ -126,6 +135,7 @@
         window.removeAllChildren = function () {
             stage.removeAllChildren();
             shareRenderInitFormulaireShape();
+            window.shareRenderResetResult();
             Materialize.toast('new empty canvas !', 2000, 'rounded');
         };
         // -------------------------- return request --------------
@@ -143,32 +153,69 @@
 
 
     // -------------------------------- send data to backend in ajax -------------------------
-    (function ($) {
-        function processForm(e) {
-            // recup all value to push on backend
-            var dataToSend = window.getDFS();
-            console.log(dataToSend);
-            // ajax POST
-            $.ajax({
-                url: 'backend',
-                dataType: 'text',
-                type: 'post',
-                contentType: 'application/json',
-                data: JSON.stringify(dataToSend),
-                //data: JSON.stringify({"SVC": {"C": 1.0, "kernel": "rbf", "cache_size": 200, "tol": 0.001, "max_iter": -1, "class_weight": null, "shrinking": true, "degree": 3, "random_state": null, "coef0": 0.0, "decision_function_shape": null, "gamma": "auto", "probability": false, "verbose": false}}),
-                success: function (dataReceive, textStatus, jQxhr) {
-                    window.shareRenderResult(JSON.parse(dataReceive));
-                },
-                error: function (jqXhr, textStatus, errorThrown) {
-                    console.log(errorThrown);
-                }
-            });
-
-            e.preventDefault();
+    $('#my-form').submit(function (e) {
+        e.preventDefault();
+        var arr = [];
+        var tabtest = [];
+        var tabResult ={};
+        var dataToSend = getDFS();
+        for (var name in dataToSend) {
+            tabtest.push(dataToSend[name]);
         }
+        tabtest.forEach(function (elementInTab) {
+            arr.push(
+                $.ajax({
+                    url: 'backend',
+                    dataType: 'text',
+                    type: 'post',
+                    contentType: 'application/json',
+                    data: JSON.stringify(elementInTab),
+                    //data: JSON.stringify({"SVC": {"C": 1.0, "kernel": "rbf", "cache_size": 200, "tol": 0.001, "max_iter": -1, "class_weight": null, "shrinking": true, "degree": 3, "random_state": null, "coef0": 0.0, "decision_function_shape": null, "gamma": "auto", "probability": false, "verbose": false}}),
+                    success: function (dataReceive, textStatus, jQxhr) {
+                        window.shareRenderResetResult();
+                        var temp = JSON.parse(dataReceive);
+                        for( var i in temp){
+                            tabResult[i] = temp[i];
+                        }
+                        window.shareRenderResult(tabResult,tabtest.length);
+                    },
+                    error: function (jqXhr, textStatus, errorThrown) {
+                        console.log(errorThrown);
+                    }
+                })
+            )
+        });
+        $.when.apply(undefined, arr).then(function () {
+            Materialize.toast('all tasks done !', 3000, 'rounded');
+        });
+    });
 
-        $('#my-form').submit(processForm);
-    })(jQuery);
+    {#    // -------------------------------- send data to backend in ajax -------------------------#}
+    {#    (function ($) {#}
+    {#        function processForm(e) {#}
+    {#            // recup all value to push on backend#}
+    {#            var dataToSend = window.getDFS();#}
+    {#            // ajax POST#}
+    {#            $.ajax({#}
+    {#                url: 'backend',#}
+    {#                dataType: 'text',#}
+    {#                type: 'post',#}
+    {#                contentType: 'application/json',#}
+    {#                data: JSON.stringify(dataToSend),#}
+    {#                //data: JSON.stringify({"SVC": {"C": 1.0, "kernel": "rbf", "cache_size": 200, "tol": 0.001, "max_iter": -1, "class_weight": null, "shrinking": true, "degree": 3, "random_state": null, "coef0": 0.0, "decision_function_shape": null, "gamma": "auto", "probability": false, "verbose": false}}),#}
+    {#                success: function (dataReceive, textStatus, jQxhr) {#}
+    {#                    window.shareRenderResult(JSON.parse(dataReceive));#}
+    {#                },#}
+    {#                error: function (jqXhr, textStatus, errorThrown) {#}
+    {#                    console.log(errorThrown);#}
+    {#                }#}
+    {#            });#}
+    {##}
+    {#            e.preventDefault();#}
+    {#        }#}
+    {##}
+    {#        $('#my-form').submit(processForm);#}
+    {#    })(jQuery);#}
 
 
 </script>

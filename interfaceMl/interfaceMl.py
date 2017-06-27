@@ -92,43 +92,40 @@ class UseScikit(Resource):
         # faire de calcul si il y sont. juste retourner la réponse
         listProcess.clear()
         receive_json = request.get_json()
-        resultatform = {}
-        for k, v in receive_json.items():
-            for key, value in v.items():
+        resultatf = {}
 
-                newValue = {}
-                for nameparams, valueParams, in value.items():
-                    # check if data diff to défault data
-                    print(valueParams)
-                    if valueParams == "":
-                        print('value empty replaced by default')
-                        newValue[nameparams] = dictParamEstimator[key][nameparams]
-                    elif valueParams != dictParamEstimator[key][nameparams]:
-                        print('value not empty and not equal to default. change type to type in docstring')
-                        valueConverted = literal_eval(valueParams)
-                        print('value convert ast = {0}'.format(valueConverted))
-                        newValue[nameparams] = dictTypeEstimator[key][nameparams][0](valueConverted)
-                        print('valeur convert selons dico type= {0}'.format(newValue[nameparams]))
-                try:
-                    # create the classificator
-                    clf = dictEstimator[key]()
-                    # send params issue by the request
-                    clf.set_params(**newValue)
+        for nameClassifier, dictParams in receive_json.items():
 
-                    # évaluate the scoring
-                    scores = cross_val_score(clf, x_data_filtered, y_data_filtered, cv=3)
+            newValue = {}
+            for nameparams, valueParams, in dictParams.items():
+                # check if data diff to défault data
+                print(valueParams)
+                if valueParams == "":
+                    print('value empty replaced by default')
+                    newValue[nameparams] = dictParamEstimator[nameClassifier][nameparams]
+                elif valueParams != dictParamEstimator[nameClassifier][nameparams]:
+                    print('value not empty and not equal to default. change type to type in docstring')
+                    valueConverted = literal_eval(valueParams)
+                    print('value convert ast = {0}'.format(valueConverted))
+                    newValue[nameparams] = dictTypeEstimator[nameClassifier][nameparams][0](valueConverted)
+                    print('valeur convert selons dico type= {0}'.format(newValue[nameparams]))
+            try:
+                # create the classificator
+                clf = dictEstimator[nameClassifier]()
+                # send params issue by the request
+                clf.set_params(**newValue)
 
-                    # Stock the result into variable resultat
-                    resultat = ("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
+                # évaluate the scoring
+                scores = cross_val_score(clf, x_data_filtered, y_data_filtered, cv=3)
 
-                    # stock for the id of the shape, the result (dict form { idShape : resultat}
-                    resultatform[k] = resultat
+                # Stock the result into variable resultat
+                resultatf[nameClassifier] = ("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
 
-                except Exception:
-                    traceback.format_exc()
+            except Exception:
+                traceback.format_exc()
+                # return all result processed
+        return jsonify(resultatf)
 
-        # return all result processed
-        return jsonify(resultatform)
 
 def create_app():
     # create the application instance :)
@@ -151,10 +148,6 @@ def create_app():
     # route to process Scikit-learn
     api.add_resource(UseScikit2, '/backend2')
 
-    # define the route of the index
-    @app.route('/')
-    def test():
-        return render_template('multipleAjaxTest.html')
 
     # define the route of the index
     @app.route('/index')

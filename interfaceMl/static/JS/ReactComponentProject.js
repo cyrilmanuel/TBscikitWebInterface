@@ -101,26 +101,59 @@ window.shareRenderInitFormulaireShape = function () {
 // ------------------------ RENDER RETURN RESULT OF JSON -----------------------
 
 class ResultDiv extends React.Component {
+    constructor(props) {
+        super(props);
+        this.nbRender = this.props.nb;
+        this.responseDict = this.props.dict || {};
+        this.tabResponseEmpty = Array.apply(null, {length: (this.nbRender - Object.keys(this.responseDict).length)}).map(Number.call, Number)
+    }
+
     render() {
-        let dict = this.props.dict || {};
-        let result = Object.keys(dict).map(name => {
+        let result = Object.keys(this.responseDict).map(name => {
                 return (
-                    <div key={name}>id of the shape = {name} {dict[name]}
+                    <div className="col s4">
+                        <div key={name}>Result for {name} {this.responseDict[name]}
+                        </div>
+                    </div>
+                );
+            }
+        );
+        let listItems = Object.keys(this.tabResponseEmpty).map(index => {
+                return (
+                    <div className="col s4" key={index}>
+                        <div className="preloader-wrapper big active">
+                            <div className="spinner-layer spinner-blue-only">
+                                <div className="circle-clipper left">
+                                    <div className="circle"></div>
+                                </div>
+                                <div className="gap-patch">
+                                    <div className="circle"></div>
+                                </div>
+                                <div className="circle-clipper right">
+                                    <div className="circle"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 );
             }
         );
         return (
-            <div key={2}>{result}</div>
+            <div>{result}{listItems}</div>
         );
     }
 }
 ;
 
-window.shareRenderResult = function (DictResultPost) {
-
+window.shareRenderResult = function (DictResultPost, nbResult) {
     ReactDOM.render(
-        <ResultDiv dict={DictResultPost}/>,
+        <ResultDiv dict={DictResultPost} nb={nbResult}/>,
+        document.getElementById('response')
+    );
+};
+window.shareRenderResetResult = function () {
+    ReactDOM.render(
+        <div></div>,
         document.getElementById('response')
     );
 };
