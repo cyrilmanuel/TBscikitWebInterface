@@ -39,14 +39,9 @@ For the frontend, install package.json with NPM :
 npm install
 ```
 
-install bower.json with BOWER :
-```
-bower install
-```
-
 Now, you can launch the server to start the website
 ```
-$ FLASK_APP=wsgi.py flask run
+$ FLASK_APP=wsgi.py; flask run --with-threads
 ```
 
 open your browser to the localhost:5000

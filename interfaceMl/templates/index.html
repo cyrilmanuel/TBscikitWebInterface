@@ -165,6 +165,7 @@
         tabtest.forEach(function (elementInTab) {
             arr.push(
                 $.ajax({
+                    async : true,
                     url: 'backend',
                     dataType: 'text',
                     type: 'post',
