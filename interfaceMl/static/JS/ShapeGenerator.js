@@ -63,9 +63,12 @@
     };
 
     p.handlePressUp = function (event) {
+        if (this.isStateClick == false){
+            window.hitShape(this.name);
+        }
         this.isStateClick = true;
-    };
 
+    };
 
     p.handlePressMove = function (event) {
             event.target.x = event.stageX;

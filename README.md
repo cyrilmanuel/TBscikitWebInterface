@@ -41,7 +41,7 @@ npm install
 
 Now, you can launch the server to start the website
 ```
-$ FLASK_APP=wsgi.py; flask run --with-threads
+$ export FLASK_APP=wsgi.py; flask run --with-threads
 ```
 
 open your browser to the localhost:5000

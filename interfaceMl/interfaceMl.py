@@ -5,13 +5,15 @@ import pickle, re, traceback, os
 from sklearn import datasets
 from ast import literal_eval
 from numpydoc.docscrape import NumpyDocString
+from sklearn.externals import joblib
+
 import interfaceMl.extractSqlToPickle
 from flask_restful import Resource, Api
 from sklearn.utils.testing import all_estimators
 from sklearn.model_selection import cross_val_score
 from importlib import import_module
 from flask import Flask, request, redirect, url_for, \
-    render_template, flash, jsonify
+    render_template, flash, jsonify, send_file, send_from_directory
 
 # TODO change all UPLOAD_FOLDER by app.config get
 with open('interfaceMl/DataSet/x_data_filtered.pickle', 'rb') as f:
@@ -78,8 +80,43 @@ for name, class_ in all_estimators():
 
 class UseScikit2(Resource):
     def get(self):
-        # return dictionnary {nameClassifier : {Params1:value1, Params2:value2}}
-        return jsonify(2)
+        return send_file('DataSet/newModel.pkl',
+                  mimetype='application/python-pickle',
+                  attachment_filename='newModel.pkl',
+                  as_attachment=True)
+
+    def post(self):
+        receive_json = request.get_json()
+        resultatf = {}
+        print('-------------------- ---------------- ---------------------')
+        print(receive_json)
+        for nameClassifier, dictParams in receive_json.items():
+            newValue = {}
+            for nameparams, valueParams, in dictParams.items():
+                # check if data diff to défault data
+                print(valueParams)
+                if valueParams == "":
+                    print('value empty replaced by default')
+                    newValue[nameparams] = dictParamEstimator[nameClassifier][nameparams]
+                elif valueParams != dictParamEstimator[nameClassifier][nameparams]:
+                    print('value not empty and not equal to default. change type to type in docstring')
+                    valueConverted = literal_eval(valueParams)
+                    print('value convert ast = {0}'.format(valueConverted))
+                    newValue[nameparams] = dictTypeEstimator[nameClassifier][nameparams][0](valueConverted)
+                    print('valeur convert selons dico type= {0}'.format(newValue[nameparams]))
+            try:
+                # create the classificator
+                clf = dictEstimator[nameClassifier]()
+                # send params issue by the request
+                clf.set_params(**newValue)
+
+                clf.fit(x_data_filtered, y_data_filtered)
+                joblib.dump(clf, 'interfaceMl/DataSet/newModel.pkl')
+
+            except Exception:
+                traceback.format_exc()
+                # return all result processed
+        return jsonify('succes')
 
 
 class UseScikit(Resource):
@@ -146,8 +183,7 @@ def create_app():
     # route to process Scikit-learn
     api.add_resource(UseScikit, '/backend')
     # route to process Scikit-learn
-    api.add_resource(UseScikit2, '/backend2')
-
+    api.add_resource(UseScikit2, '/getfile')
 
     # define the route of the index
     @app.route('/index')

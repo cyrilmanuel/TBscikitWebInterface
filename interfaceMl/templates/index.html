@@ -26,7 +26,7 @@
     </div>
     <div class="col s6">
         <div class="row">
-            test
+            <a class="waves-effect waves-light btn" onclick="startDownload()"> Export modele trained </a>
         </div>
         <canvas id="demoCanvas" width="600" height="600"
                 style="border: 1px solid black; width: 100%; height: 100% "></canvas>
@@ -71,8 +71,7 @@
     </div>
 </div>
 <script>
-    var dict = {}
-    var Colors = {
+    let Colors = {
         aqua: "#00ffff",
         azure: "#f0ffff",
         beige: "#f5f5dc",
@@ -99,7 +98,7 @@
     };
     // --------------------------------- initialisation of the canvas --------------
     function init() {
-        var idShape = 0;
+        let idShape = 0;
         // -------------------------- request Get in ajax ------------
         $.getJSON("backend", function success(dictDataReceive) {
                 // generate button list with all name classifier
@@ -108,17 +107,30 @@
         );
 
         // --------------------------------- init canvas ---------------------
-        var stage = new createjs.Stage("demoCanvas");
+        let stage = new createjs.Stage("demoCanvas");
         createjs.Ticker.addEventListener("tick", handleTick);
 
-        function handleTick(event) {
+        function handleTick() {
             stage.update();
+        }
+
+        window.hitShape = function (nameShape) {
+
+            for (let indexShape in stage.children) {
+                if (stage.children[indexShape].name !== nameShape) {
+                    let pt = stage.children[indexShape].localToLocal(0, 0, stage.getChildByName(nameShape));
+                    if (stage.getChildByName(nameShape).hitTest(pt.x, pt.y)) {
+                        //TODO CREATE MENU TO CHANGE SHAPE ON SHAPE ENSEMBLE LEARNING
+                        alert("i touch other shape");
+                    }
+                }
+            }
         };
 
         // ------------------------- func global for add shape to stage ---------------------
         window.addShape = function (nameClassifier, dictParamsClassifier) {
-            var sizeCanvas = {"width": stage.canvas.width, "height": stage.canvas.height};
-            var shapeTemp = new ShapeGenerator(idShape.toString(), nameClassifier, dictParamsClassifier, sizeCanvas);
+            const sizeCanvas = {"width": stage.canvas.width, "height": stage.canvas.height};
+            let shapeTemp = new ShapeGenerator(idShape.toString(), nameClassifier, dictParamsClassifier, sizeCanvas);
             stage.addChild(shapeTemp);
             idShape++;
         };
@@ -138,34 +150,37 @@
             window.shareRenderResetResult();
             Materialize.toast('new empty canvas !', 2000, 'rounded');
         };
+
+        window.getAllChildren = function () {
+            return stage.children;
+        }
         // -------------------------- return request --------------
         window.getDFS = function () {
-            var res = {};
+            let res = {};
             //parcour all shape on canvas and return a dict
             // like this {id : {name : {params classifier}} }
-            for (var indexShape in stage.children) {
+            for (let indexShape in stage.children) {
                 res[stage.children[indexShape].name] = stage.children[indexShape].getDataDict();
             }
             return res;
         };
     }
-    (jQuery);
 
 
     // -------------------------------- send data to backend in ajax -------------------------
     $('#my-form').submit(function (e) {
         e.preventDefault();
-        var arr = [];
-        var tabtest = [];
-        var tabResult ={};
-        var dataToSend = getDFS();
-        for (var name in dataToSend) {
+        let arr = [];
+        let tabtest = [];
+        let tabResult = {};
+        let dataToSend = getDFS();
+        for (let name in dataToSend) {
             tabtest.push(dataToSend[name]);
         }
         tabtest.forEach(function (elementInTab) {
             arr.push(
                 $.ajax({
-                    async : true,
+                    async: true,
                     url: 'backend',
                     dataType: 'text',
                     type: 'post',
@@ -174,11 +189,11 @@
                     //data: JSON.stringify({"SVC": {"C": 1.0, "kernel": "rbf", "cache_size": 200, "tol": 0.001, "max_iter": -1, "class_weight": null, "shrinking": true, "degree": 3, "random_state": null, "coef0": 0.0, "decision_function_shape": null, "gamma": "auto", "probability": false, "verbose": false}}),
                     success: function (dataReceive, textStatus, jQxhr) {
                         window.shareRenderResetResult();
-                        var temp = JSON.parse(dataReceive);
-                        for( var i in temp){
+                        let temp = JSON.parse(dataReceive);
+                        for (let i in temp) {
                             tabResult[i] = temp[i];
                         }
-                        window.shareRenderResult(tabResult,tabtest.length);
+                        window.shareRenderResult(tabResult, tabtest.length);
                     },
                     error: function (jqXhr, textStatus, errorThrown) {
                         console.log(errorThrown);
@@ -190,35 +205,29 @@
             Materialize.toast('all tasks done !', 3000, 'rounded');
         });
     });
+    function startDownload() {
+        let val = window.getAllChildren();
+        if (val.length == 1) {
+            let dataToSend = getDFS();
+            $.ajax({
+                async: true,
+                url: 'getfile',
+                dataType: 'text',
+                type: 'post',
+                contentType: 'application/json',
+                data: JSON.stringify(dataToSend[0]),
+                //data: JSON.stringify({"SVC": {"C": 1.0, "kernel": "rbf", "cache_size": 200, "tol": 0.001, "max_iter": -1, "class_weight": null, "shrinking": true, "degree": 3, "random_state": null, "coef0": 0.0, "decision_function_shape": null, "gamma": "auto", "probability": false, "verbose": false}}),
+                success: function (dataReceive, textStatus, jQxhr) {
+                    alert("succes");
+                    window.open('getfile', 'Download');
+                },
+                error: function (jqXhr, textStatus, errorThrown) {
+                    console.log(errorThrown);
+                }
+            })
+        }
 
-    {#    // -------------------------------- send data to backend in ajax -------------------------#}
-    {#    (function ($) {#}
-    {#        function processForm(e) {#}
-    {#            // recup all value to push on backend#}
-    {#            var dataToSend = window.getDFS();#}
-    {#            // ajax POST#}
-    {#            $.ajax({#}
-    {#                url: 'backend',#}
-    {#                dataType: 'text',#}
-    {#                type: 'post',#}
-    {#                contentType: 'application/json',#}
-    {#                data: JSON.stringify(dataToSend),#}
-    {#                //data: JSON.stringify({"SVC": {"C": 1.0, "kernel": "rbf", "cache_size": 200, "tol": 0.001, "max_iter": -1, "class_weight": null, "shrinking": true, "degree": 3, "random_state": null, "coef0": 0.0, "decision_function_shape": null, "gamma": "auto", "probability": false, "verbose": false}}),#}
-    {#                success: function (dataReceive, textStatus, jQxhr) {#}
-    {#                    window.shareRenderResult(JSON.parse(dataReceive));#}
-    {#                },#}
-    {#                error: function (jqXhr, textStatus, errorThrown) {#}
-    {#                    console.log(errorThrown);#}
-    {#                }#}
-    {#            });#}
-    {##}
-    {#            e.preventDefault();#}
-    {#        }#}
-    {##}
-    {#        $('#my-form').submit(processForm);#}
-    {#    })(jQuery);#}
-
-
+    }
 </script>
 </body>
 </html>
