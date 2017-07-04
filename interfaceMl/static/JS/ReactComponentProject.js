@@ -34,6 +34,47 @@ window.shareRenderButtonList = function (dataClassifier) {
     );
 };
 
+
+// ---------------------------------------- list ensemble shape --------------------------------------------
+
+class EnsembleList extends React.Component {
+    constructor(props) {
+        super(props);
+        this.IdEnsembleLearning = this.props.IdEnsembleLearning;
+        this.dataClassifier = this.props.dataClassifier;
+        this.onClick = this.onClick.bind(this);
+    }
+
+    onClick(event) {
+        shareRenderInitFormulaireShape();
+        shareRenderFormEnsemble(this.dataClassifier[event.target.id][event.target.name], event.target.name, event.target.id, this.IdEnsembleLearning, this.dataClassifier);
+    }
+
+    render() {
+        let rows = [];
+        for (let idshape in this.dataClassifier) {
+            for (let nameClassifier in this.dataClassifier[idshape]) {
+                let row = <a className="collection-item" onClick={this.onClick} id={idshape}
+                             key={idshape} name={nameClassifier}>{nameClassifier}</a>;
+                rows.push(row);
+            }
+        }
+        ;
+        return (
+            <div className="collection">{rows}</div>
+        );
+    }
+}
+;
+
+window.shareRenderEnsembleList = function (dataClassifier, IdEnsembleLearning) {
+    ReactDOM.render(
+        <EnsembleList dataClassifier={dataClassifier} IdEnsembleLearning={IdEnsembleLearning}/>,
+        document.getElementById('formClassificator')
+    );
+};
+
+
 // ------------------------------------------- Show Form ---------------------------------------
 
 class Formul extends React.Component {
@@ -49,7 +90,6 @@ class Formul extends React.Component {
     handleChange(event) {
         this.setState({[event.target.name]: event.target.value});
         window.updateShapeParam(this.idShape, this.state);
-        Materialize.toast('Updated parameters of ' + this.name, 2000, 'rounded');
     }
 
     handleDelete(event) {
@@ -91,6 +131,75 @@ window.shareRenderFormShape = function (dictParamsClassifier, nameClassifier, id
         document.getElementById('formClassificator')
     );
 };
+
+// -------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------- FORMULAIRE ENSEMBLE ---------------------------------------------
+// -------------------------------------------------------------------------------------------------------------------
+class FormEnsemble extends React.Component {
+    constructor(props) {
+        super(props);
+        this.name = this.props.name;
+        this.state = this.props.dict; // trick replace state dict by dict params clasifier
+        this.handleDelete = this.handleDelete.bind(this);
+        this.handleChange = this.handleChange.bind(this);
+        this.handleList = this.handleList.bind(this);
+    }
+
+    handleChange(event) {
+        this.setState({[event.target.name]: event.target.value});
+        window.updateShapeEnsembleParam(this.idShape, this.state, this.props.idShapeParent);
+    }
+
+    handleDelete(event) {
+        if (confirm('Are you sure you want to remove the shape ' + this.name + '?')) {
+            window.removeEnsembleShape(this.props.idShapeParent, this.props.idShape);
+             Materialize.toast(this.name + ' removed !', 2000, 'rounded');
+             //shareRenderInitFormulaireShape();
+        }
+
+        event.preventDefault();
+    }
+
+    handleList(event) {
+        shareRenderInitFormulaireShape();
+        shareRenderEnsembleList(this.props.dictAllClassifier, this.props.idShapeParent);
+    }
+
+    render() {
+        return (
+            <form key="formParams">
+                <div className="row">
+                    <div className="col s6">
+                        <a className="waves-effect waves-light btn" name="showList" onClick={this.handleList}
+                           key="ShowList">Return</a>
+                    </div>
+                    <div className="col s6">
+                        <a className="waves-effect waves-light btn" name="Delete" onClick={this.handleDelete}
+                           key="Delete">Delete Shape</a>
+                    </div>
+                </div>
+                {Object.keys(this.state).map(name => {
+                    return (
+                        <label key={'label' + name}> {name}
+                            <input type="text" name={name} value={this.state[name]} onChange={this.handleChange}
+                                   placeholder={this.state[name]} key={name}/>
+                        </label>
+                    );
+                })}
+            </form>
+        );
+    }
+}
+;
+
+window.shareRenderFormEnsemble = function (dictParamsClassifier, nameClassifier, idShape, idShapeParent, dictAllClassifier) {
+    ReactDOM.render(
+        <FormEnsemble dict={dictParamsClassifier} name={nameClassifier} idShape={idShape}
+                      idShapeParent={idShapeParent} dictAllClassifier={dictAllClassifier}/>,
+        document.getElementById('formClassificator')
+    );
+};
+
 
 window.shareRenderInitFormulaireShape = function () {
     ReactDOM.render(

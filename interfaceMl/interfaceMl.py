@@ -92,6 +92,8 @@ class UseScikit2(Resource):
         print(receive_json)
         for nameClassifier, dictParams in receive_json.items():
             newValue = {}
+            # TODO CHECK THE NAMECLASSIFIER IF ENSEMBLELEARNING DO THIS
+
             for nameparams, valueParams, in dictParams.items():
                 # check if data diff to défault data
                 print(valueParams)
@@ -100,6 +102,9 @@ class UseScikit2(Resource):
                     newValue[nameparams] = dictParamEstimator[nameClassifier][nameparams]
                 elif valueParams != dictParamEstimator[nameClassifier][nameparams]:
                     print('value not empty and not equal to default. change type to type in docstring')
+                    # TODO verifie all type true false and int float sended by client
+                    # TODO because he not work when params change in str convert by literal_eval.
+                    # TODO change evaluation of the different params.
                     valueConverted = literal_eval(valueParams)
                     print('value convert ast = {0}'.format(valueConverted))
                     newValue[nameparams] = dictTypeEstimator[nameClassifier][nameparams][0](valueConverted)
@@ -195,7 +200,7 @@ def create_app():
                filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS_UPLOAD']
 
     # define the route of the upload
-    @app.route('/f', methods=['GET', 'POST'])
+    @app.route('/', methods=['GET', 'POST'])
     def upload_file():
         if request.method == 'POST':
             # check if the post request has the file part

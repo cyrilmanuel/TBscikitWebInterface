@@ -10,6 +10,8 @@
     <script src="{{ url_for('static', filename='node_modules/createjs-module/vendor_modules/EaselJS-0.8.2/lib/easeljs-0.8.2.min.js') }}"></script>
     <script type="text/babel" src="{{ url_for('static', filename='JS/ReactComponentProject.js') }}"></script>
     <script src="{{ url_for('static', filename='JS/ShapeGenerator.js') }}"></script>
+    <script src="{{ url_for('static', filename='JS/SubShapeGenerator.js') }}"></script>
+    <script src="{{ url_for('static', filename='JS/EnsembleShapeGenerator.js') }}"></script>
     <link rel="shortcut icon" href="">
     <link rel="stylesheet" href="{{ url_for('static', filename='node_modules/materialize-css/bin/materialize.css') }}">
     <script src="{{ url_for('static', filename='node_modules/materialize-css/bin/materialize.js') }}"></script>
@@ -115,13 +117,29 @@
         }
 
         window.hitShape = function (nameShape) {
-
-            for (let indexShape in stage.children) {
-                if (stage.children[indexShape].name !== nameShape) {
-                    let pt = stage.children[indexShape].localToLocal(0, 0, stage.getChildByName(nameShape));
-                    if (stage.getChildByName(nameShape).hitTest(pt.x, pt.y)) {
-                        //TODO CREATE MENU TO CHANGE SHAPE ON SHAPE ENSEMBLE LEARNING
-                        alert("i touch other shape");
+            if (stage.getChildByName(nameShape).nameClassifier != "Ensemble Learning") {
+                for (let indexShape in stage.children) {
+                    if (stage.children[indexShape].name !== nameShape) {
+                        let pt = stage.children[indexShape].localToLocal(0, 0, stage.getChildByName(nameShape));
+                        if (stage.getChildByName(nameShape).hitTest(pt.x, pt.y)) {
+                            alert(stage.getChildByName(indexShape).nameClassifier);
+                            if (stage.children[indexShape].nameClassifier != "Ensemble Learning") {
+                                if (confirm('ensemble learning ?')) {
+                                    const sizeCanvas = {"width": stage.canvas.width, "height": stage.canvas.height};
+                                    let ensembleShapeTemp = new EnsembleShapeGenerator(idShape.toString(), sizeCanvas, stage.getChildByName(nameShape).getDataDict(),stage.children[indexShape].getDataDict());
+                                    stage.addChild(ensembleShapeTemp);
+                                    removeShape(stage.children[indexShape].name);
+                                    removeShape(nameShape);
+                                    idShape++;
+                                }
+                                else {
+                                    stage.getChildByName(nameShape).resetPositionShape();
+                                }
+                            }else {
+                                stage.getChildByName(indexShape).addClassifier(stage.getChildByName(nameShape).getDataDict());
+                                removeShape(stage.children[indexShape].name);
+                            }
+                        }
                     }
                 }
             }
@@ -134,21 +152,34 @@
             stage.addChild(shapeTemp);
             idShape++;
         };
+        window.CreateEnsembleShape = function (nameClassifier, dictParamsClassifier) {
+            const sizeCanvas = {"width": stage.canvas.width, "height": stage.canvas.height};
+            let shapeEnsembleTemp = new EnsembleShapeGenerator(idShape.toString(), nameClassifier, dictParamsClassifier, sizeCanvas);
+            shapeEnsembleTemp.addSubShape();
+            stage.addChild(shapeEnsembleTemp);
+            idShape++;
+        };
 
         window.removeShape = function (idShape) {
             stage.removeChild(stage.getChildByName(idShape));
             shareRenderInitFormulaireShape();
         };
+        window.removeEnsembleShape = function (idShapeParent, idShapeChild) {
+            stage.getChildByName(idShapeParent).removeSubShape(idShapeChild);
+        };
 
         window.updateShapeParam = function (idShape, dictParams) {
             stage.getChildByName(idShape).updateDictData(dictParams);
+        };
+        window.updateShapeEnsembleParam = function (idShapeChild, dictParamsChild, idShapeParent) {
+            stage.getChildByName(idShapeParent).updateDictData(idShapeChild, dictParamsChild);
         };
 
         window.removeAllChildren = function () {
             stage.removeAllChildren();
             shareRenderInitFormulaireShape();
             window.shareRenderResetResult();
-            Materialize.toast('new empty canvas !', 2000, 'rounded');
+            Materialize.toast('new empty canvas !', 2500, 'rounded');
         };
 
         window.getAllChildren = function () {
@@ -202,7 +233,7 @@
             )
         });
         $.when.apply(undefined, arr).then(function () {
-            Materialize.toast('all tasks done !', 3000, 'rounded');
+            Materialize.toast('all cross-validation done !', 3000, 'rounded');
         });
     });
     function startDownload() {
@@ -218,7 +249,6 @@
                 data: JSON.stringify(dataToSend[0]),
                 //data: JSON.stringify({"SVC": {"C": 1.0, "kernel": "rbf", "cache_size": 200, "tol": 0.001, "max_iter": -1, "class_weight": null, "shrinking": true, "degree": 3, "random_state": null, "coef0": 0.0, "decision_function_shape": null, "gamma": "auto", "probability": false, "verbose": false}}),
                 success: function (dataReceive, textStatus, jQxhr) {
-                    alert("succes");
                     window.open('getfile', 'Download');
                 },
                 error: function (jqXhr, textStatus, errorThrown) {
