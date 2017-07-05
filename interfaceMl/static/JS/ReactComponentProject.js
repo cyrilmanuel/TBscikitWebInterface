@@ -43,6 +43,14 @@ class EnsembleList extends React.Component {
         this.IdEnsembleLearning = this.props.IdEnsembleLearning;
         this.dataClassifier = this.props.dataClassifier;
         this.onClick = this.onClick.bind(this);
+        this.onDelete = this.onDelete.bind(this);
+    }
+
+    onDelete(event) {
+        if (confirm('Are you sure you want to remove the ensemble learning ?')) {
+            window.removeShape(this.props.IdEnsembleLearning);
+            Materialize.toast('ensemble learning removed !', 2000, 'rounded');
+        }
     }
 
     onClick(event) {
@@ -51,7 +59,15 @@ class EnsembleList extends React.Component {
     }
 
     render() {
+        let allrow="";
+        let final =[];
         let rows = [];
+        let buttonDelete =  <div className="row">
+                    <div className="col s12">
+                        <a className="waves-effect waves-light btn" name="Delete" onClick={this.onDelete}
+                           key="Delete">Delete Ensemble</a>
+                    </div>
+                </div>;
         for (let idshape in this.dataClassifier) {
             for (let nameClassifier in this.dataClassifier[idshape]) {
                 let row = <a className="collection-item" onClick={this.onClick} id={idshape}
@@ -60,8 +76,11 @@ class EnsembleList extends React.Component {
             }
         }
         ;
+        allrow = <div className="collection">{rows}</div>
+        final.push(buttonDelete);
+        final.push(allrow);
         return (
-            <div className="collection">{rows}</div>
+            <div>{final}</div>
         );
     }
 }
@@ -153,8 +172,8 @@ class FormEnsemble extends React.Component {
     handleDelete(event) {
         if (confirm('Are you sure you want to remove the shape ' + this.name + '?')) {
             window.removeEnsembleShape(this.props.idShapeParent, this.props.idShape);
-             Materialize.toast(this.name + ' removed !', 2000, 'rounded');
-             //shareRenderInitFormulaireShape();
+            Materialize.toast(this.name + ' removed !', 2000, 'rounded');
+            //shareRenderInitFormulaireShape();
         }
 
         event.preventDefault();

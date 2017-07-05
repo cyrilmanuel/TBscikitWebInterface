@@ -1,21 +1,24 @@
 # -*- coding: utf-8 -*-
 # all the imports
 
-import pickle, re, traceback, os
-from sklearn import datasets
+import os
+import pickle
+import re
+import traceback
 from ast import literal_eval
+from importlib import import_module
+
+from flask import Flask, request, redirect, url_for, \
+    render_template, flash, jsonify, send_file
+from flask_restful import Resource, Api
 from numpydoc.docscrape import NumpyDocString
+from sklearn.ensemble import VotingClassifier
 from sklearn.externals import joblib
+from sklearn.model_selection import cross_val_score
+from sklearn.utils.testing import all_estimators
 
 import interfaceMl.extractSqlToPickle
-from flask_restful import Resource, Api
-from sklearn.utils.testing import all_estimators
-from sklearn.model_selection import cross_val_score
-from importlib import import_module
-from flask import Flask, request, redirect, url_for, \
-    render_template, flash, jsonify, send_file, send_from_directory
 
-# TODO change all UPLOAD_FOLDER by app.config get
 with open('interfaceMl/DataSet/x_data_filtered.pickle', 'rb') as f:
     x_data_filtered = pickle.load(f)
 
@@ -92,8 +95,6 @@ class UseScikit2(Resource):
         print(receive_json)
         for nameClassifier, dictParams in receive_json.items():
             newValue = {}
-            # TODO CHECK THE NAMECLASSIFIER IF ENSEMBLELEARNING DO THIS
-
             for nameparams, valueParams, in dictParams.items():
                 # check if data diff to défault data
                 print(valueParams)
@@ -138,34 +139,68 @@ class UseScikit(Resource):
 
         for nameClassifier, dictParams in receive_json.items():
 
-            newValue = {}
-            for nameparams, valueParams, in dictParams.items():
-                # check if data diff to défault data
-                print(valueParams)
-                if valueParams == "":
-                    print('value empty replaced by default')
-                    newValue[nameparams] = dictParamEstimator[nameClassifier][nameparams]
-                elif valueParams != dictParamEstimator[nameClassifier][nameparams]:
-                    print('value not empty and not equal to default. change type to type in docstring')
-                    valueConverted = literal_eval(valueParams)
-                    print('value convert ast = {0}'.format(valueConverted))
-                    newValue[nameparams] = dictTypeEstimator[nameClassifier][nameparams][0](valueConverted)
-                    print('valeur convert selons dico type= {0}'.format(newValue[nameparams]))
-            try:
-                # create the classificator
-                clf = dictEstimator[nameClassifier]()
-                # send params issue by the request
-                clf.set_params(**newValue)
+            # TODO CHECK THE NAMECLASSIFIER IF ENSEMBLELEARNING DO THIS
 
-                # évaluate the scoring
-                scores = cross_val_score(clf, x_data_filtered, y_data_filtered, cv=3)
+            # TODO NEXT SUR ITEMS
+            if (nameClassifier == 'ensemble Learning'):
+                print("ENSEMBLE LEARNING")
+                newValue = {}
+                estimators = []
+                for index, classifier, in dictParams.items():
+                    for nameSubClass, valueParams, in classifier.items():
+                        print(nameSubClass)
+                        print("------------")
+                        print(valueParams)
 
-                # Stock the result into variable resultat
-                resultatf[nameClassifier] = ("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
+                        clfChild = dictEstimator[nameSubClass]()
+                        # send params issue by the request
+                        clfChild.set_params(**valueParams)
 
-            except Exception:
-                traceback.format_exc()
-                # return all result processed
+                        estimators.append((nameSubClass, clfChild))
+
+
+                try:
+
+                    clfEnsemble = VotingClassifier(estimators)
+
+                    scoresEnsemble = cross_val_score(clfEnsemble, x_data_filtered, y_data_filtered, cv=3)
+                    print(" in TRY")
+                    resultatf[nameClassifier] = ("Accuracy: %0.2f (+/- %0.2f)" % (scoresEnsemble.mean(), scoresEnsemble.std() * 2))
+                    print(("Accuracy: %0.2f (+/- %0.2f)" % (scoresEnsemble.mean(), scoresEnsemble.std() * 2)))
+                    print("fin")
+                except Exception:
+                    traceback.format_exc()
+                    # return all result processed
+
+            else:
+                newValue = {}
+                for nameparams, valueParams, in dictParams.items():
+                    # check if data diff to défault data
+                    print(valueParams)
+                    if valueParams == "":
+                        print('value empty replaced by default')
+                        newValue[nameparams] = dictParamEstimator[nameClassifier][nameparams]
+                    elif valueParams != dictParamEstimator[nameClassifier][nameparams]:
+                        print('value not empty and not equal to default. change type to type in docstring')
+                        valueConverted = literal_eval(valueParams)
+                        print('value convert ast = {0}'.format(valueConverted))
+                        newValue[nameparams] = dictTypeEstimator[nameClassifier][nameparams][0](valueConverted)
+                        print('valeur convert selons dico type= {0}'.format(newValue[nameparams]))
+                try:
+                    # create the classificator
+                    clf = dictEstimator[nameClassifier]()
+                    # send params issue by the request
+                    clf.set_params(**newValue)
+
+                    # évaluate the scoring
+                    scores = cross_val_score(clf, x_data_filtered, y_data_filtered, cv=3)
+
+                    # Stock the result into variable resultat
+                    resultatf[nameClassifier] = ("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
+
+                except Exception:
+                    traceback.format_exc()
+                    # return all result processed
         return jsonify(resultatf)
 
 

@@ -31,14 +31,13 @@
     // setup the shape
     p.setup = function () {
         var text = new createjs.Text(this.nameClassifier, "20px Arial", "#000");
-        text.maxWidth = 100;
-        text.lineWidth = 100;
+        text.maxWidth = 150;
         text.y = 0;
         this.offset = text.getMeasuredHeight() + 5;
 
         var background = new createjs.Shape();
         var color = '#10ffee';
-        background.graphics.beginFill(color).drawRect(0, 0, 150, 100);
+        background.graphics.beginFill(color).drawRoundRect(0, 0, 150, 100, 15);
         this.addChild(background, text);
 
         // define function for interaction
@@ -60,8 +59,8 @@
     };
 
     p.handlePressMove = function (event) {
-        event.target.x = event.stageX;
-        event.target.y = event.stageY;
+        event.target.x = event.stageX - 75;
+        event.target.y = event.stageY - 50;
         this.isStateClick = false;
     };
 
@@ -76,12 +75,12 @@
         containerTemp.y = this.offset + this.idSubShapeGenerator * 25;
         let backgroundTemp = new createjs.Shape();
         let colorTemp = '#fff700';
-        backgroundTemp.graphics.beginFill(colorTemp).drawRect(0, 0, 150, 20);
+        backgroundTemp.graphics.beginFill(colorTemp).drawRoundRect(0, 0, 150, 20, 10);
         containerTemp.name = this.idSubShapeGenerator;
-        let textTemp = new createjs.Text(Object.keys(dictClassifier)[0].replace(/([A-Z])/g, ' $1').trim(), "20px Arial", "#000");
-        textTemp.maxWidth = 150;
-        textTemp.lineWidth = 150;
+        let textTemp = new createjs.Text(Object.keys(dictClassifier)[0].replace(/([A-Z])/g, ' $1').trim(), "15px Arial", "#000");
+        textTemp.maxWidth = 140;
         textTemp.y = 0;
+        textTemp.x = 10;
         this.dicParamsClassifier[this.idSubShapeGenerator] = dictClassifier;
         containerTemp.addChild(backgroundTemp, textTemp);
         this.addChild(containerTemp);
