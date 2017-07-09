@@ -1,7 +1,37 @@
 /**
  * Created by cyriljeanneret on 14.06.17.
  */
+class TypeOfButtonList extends React.Component {
+    constructor(props) {
+        super(props);
+        this.typeOfClassifier = this.props.typeOfClassifier;
+        this.onClick = this.onClick.bind(this);
+    }
 
+    onClick(event) {
+        event.target.id
+    }
+
+    render() {
+        let rows = Object.keys(this.typeOfClassifier).map(name => {
+            return (
+                <a className="collection-item" onClick={this.onClick} id={name}
+                   key={name}>{name}</a>
+            );
+        });
+        return (
+            <div className="collection">{rows}</div>
+        );
+    }
+}
+
+window.shareRenderTypeOfButtonList = function (dataClassifier) {
+    ReactDOM.render(
+        <TypeOfButtonList dataClassifier={dataClassifier}/>,
+        document.getElementById('classifier')
+    );
+};
+//---------------------------------------------- BUTTONLIST -------------------------------------
 class ButtonList extends React.Component {
     constructor(props) {
         super(props);
@@ -59,15 +89,15 @@ class EnsembleList extends React.Component {
     }
 
     render() {
-        let allrow="";
-        let final =[];
+        let allrow = "";
+        let final = [];
         let rows = [];
-        let buttonDelete =  <div className="row">
-                    <div className="col s12">
-                        <a className="waves-effect waves-light btn" name="Delete" onClick={this.onDelete}
-                           key="Delete">Delete Ensemble</a>
-                    </div>
-                </div>;
+        let buttonDelete = <div className="row">
+            <div className="col s12">
+                <a className="waves-effect waves-light btn" name="Delete" onClick={this.onDelete}
+                   key="Delete">Delete Ensemble</a>
+            </div>
+        </div>;
         for (let idshape in this.dataClassifier) {
             for (let nameClassifier in this.dataClassifier[idshape]) {
                 let row = <a className="collection-item" onClick={this.onClick} id={idshape}
@@ -239,8 +269,10 @@ class ResultDiv extends React.Component {
     render() {
         let result = Object.keys(this.responseDict).map(name => {
                 return (
-                    <div className="col s4">
-                        <div key={name}>Result for {name} {this.responseDict[name]}
+                    <div className="row">
+                        <div className="col s12">
+                            <div key={name}>Result for {name} {this.responseDict[name]}
+                            </div>
                         </div>
                     </div>
                 );
@@ -248,17 +280,19 @@ class ResultDiv extends React.Component {
         );
         let listItems = Object.keys(this.tabResponseEmpty).map(index => {
                 return (
-                    <div className="col s4" key={index}>
-                        <div className="preloader-wrapper big active">
-                            <div className="spinner-layer spinner-blue-only">
-                                <div className="circle-clipper left">
-                                    <div className="circle"></div>
-                                </div>
-                                <div className="gap-patch">
-                                    <div className="circle"></div>
-                                </div>
-                                <div className="circle-clipper right">
-                                    <div className="circle"></div>
+                    <div className="row">
+                        <div className="col s12" key={index}>
+                            <div className="preloader-wrapper active">
+                                <div className="spinner-layer spinner-green-only">
+                                    <div className="circle-clipper left">
+                                        <div className="circle"></div>
+                                    </div>
+                                    <div className="gap-patch">
+                                        <div className="circle"></div>
+                                    </div>
+                                    <div className="circle-clipper right">
+                                        <div className="circle"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

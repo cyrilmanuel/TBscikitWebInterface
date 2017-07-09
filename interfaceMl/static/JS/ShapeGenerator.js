@@ -6,6 +6,7 @@
         // stock the name of the classifier this shape will be repr
         this.name = nameOfficeID.toString();
 
+        this.typeOfClassifier = "";
         // stock the params of the classifier into the shape
         // because this shape can call the function to render
         // with React, a approprieted form

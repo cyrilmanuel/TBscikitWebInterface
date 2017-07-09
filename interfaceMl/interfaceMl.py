@@ -33,7 +33,7 @@ dictEstimator = {}
 
 # to store params estimator and name
 dictParamEstimator = {}
-
+dictDescriptionParam = {}
 # list object receive by post
 listProcess = [
 ]
@@ -79,7 +79,7 @@ for name, class_ in all_estimators():
         dictTypeEstimator[name] = getDicoParams(dictEstimator[name])
         # stock the param of the classifier
         dictParamEstimator[name] = {key: v[1] for key, v in dictTypeEstimator[name].items()}
-
+        dictDescriptionParam[name] = {key: v[2] for key, v in dictTypeEstimator[name].items()}
 
 class UseScikit2(Resource):
     def get(self):
@@ -124,11 +124,11 @@ class UseScikit2(Resource):
                 # return all result processed
         return jsonify('succes')
 
-
 class UseScikit(Resource):
     def get(self):
         # return dictionnary {nameClassifier : {Params1:value1, Params2:value2}}
-        return jsonify(dictParamEstimator)
+        tab = [dictParamEstimator, dictDescriptionParam]
+        return jsonify(tab)
 
     def post(self):
         # checker si les objets sont dans la liste et ne pas
@@ -176,16 +176,26 @@ class UseScikit(Resource):
                 newValue = {}
                 for nameparams, valueParams, in dictParams.items():
                     # check if data diff to défault data
+                    print("params name : {0} value = ".format(nameparams))
                     print(valueParams)
-                    if valueParams == "":
+                    # best way to check if empty or blank
+                    if type(valueParams) == str and not (valueParams and valueParams.strip()):
                         print('value empty replaced by default')
                         newValue[nameparams] = dictParamEstimator[nameClassifier][nameparams]
+
                     elif valueParams != dictParamEstimator[nameClassifier][nameparams]:
+                        # in this state, valueParams = str and different to the default value of the params
                         print('value not empty and not equal to default. change type to type in docstring')
-                        valueConverted = literal_eval(valueParams)
-                        print('value convert ast = {0}'.format(valueConverted))
-                        newValue[nameparams] = dictTypeEstimator[nameClassifier][nameparams][0](valueConverted)
-                        print('valeur convert selons dico type= {0}'.format(newValue[nameparams]))
+                        if dictTypeEstimator[nameClassifier][nameparams][0] == bool:
+                            valueParams = valueParams.title()
+
+                        if dictTypeEstimator[nameClassifier][nameparams][0] != str:
+
+                            valueConverted = literal_eval(valueParams)
+                            print('value convert ast = {0}'.format(valueConverted))
+                            newValue[nameparams] = dictTypeEstimator[nameClassifier][nameparams][0](valueConverted)
+                            print('valeur convert selons dico type= {0}'.format(newValue[nameparams]))
+
                 try:
                     # create the classificator
                     clf = dictEstimator[nameClassifier]()
