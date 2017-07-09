@@ -1,7 +1,7 @@
 (function () {
 
     // constructor shape
-    function ShapeGenerator(nameOfficeID, nameClassifier, dictParamsClassifier, sizeCanvas) {
+    function ShapeGenerator(nameOfficeID, nameClassifier, dictParamsClassifier, dictDescriptionParamsClassifier, sizeCanvas) {
         this.Container_constructor();
         // stock the name of the classifier this shape will be repr
         this.name = nameOfficeID.toString();
@@ -11,6 +11,8 @@
         // because this shape can call the function to render
         // with React, a approprieted form
         this.dicParamsClassifier = dictParamsClassifier;
+        this.dictDescriptionParamsClassifier = dictDescriptionParamsClassifier;
+
         this.nameClassifier = nameClassifier;
 
         // size of canvas to psh on center
@@ -29,8 +31,8 @@
         var text = new createjs.Text(this.nameClassifier.replace(/([A-Z])/g, ' $1').trim(), "20px Arial", "#000");
         text.textAlign = "center";
         text.maxWidth = 100;
-        text.lineWidth=100;
-         text.y = -1 * text.getMeasuredHeight()/2;
+        text.lineWidth = 100;
+        text.y = -1 * text.getMeasuredHeight() / 2;
 
         var background = new createjs.Shape();
         // var color = '#' + (0x1000000 + (Math.random()) * 0xffffff).toString(16).substr(1, 6);
@@ -59,12 +61,12 @@
     p.handleClick = function (event) {
         if (this.isStateClick) {
             shareRenderInitFormulaireShape();
-            shareRenderFormShape(this.dicParamsClassifier, this.nameClassifier, this.name);
+            shareRenderFormShape(this.dicParamsClassifier, this.dictDescriptionParamsClassifier, this.nameClassifier, this.name);
         }
     };
 
     p.handlePressUp = function (event) {
-        if (this.isStateClick == false){
+        if (this.isStateClick == false) {
             window.hitShape(this.name);
         }
         this.isStateClick = true;
@@ -72,8 +74,8 @@
     };
 
     p.handlePressMove = function (event) {
-            event.target.x = event.stageX;
-            event.target.y = event.stageY;
+        event.target.x = event.stageX;
+        event.target.y = event.stageY;
         this.isStateClick = false;
     };
 

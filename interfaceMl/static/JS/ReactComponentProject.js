@@ -35,12 +35,13 @@ window.shareRenderTypeOfButtonList = function (dataClassifier) {
 class ButtonList extends React.Component {
     constructor(props) {
         super(props);
+        this.descriptionDataClassifier = this.props.descriptionDataClassifier;
         this.dataClassifier = this.props.dataClassifier;
         this.onClick = this.onClick.bind(this);
     }
 
     onClick(event) {
-        window.addShape(event.target.id, this.props.dataClassifier[event.target.id]);
+        window.addShape(event.target.id, this.props.dataClassifier[event.target.id], this.props.descriptionDataClassifier[event.target.id]);
     }
 
     render() {
@@ -57,9 +58,9 @@ class ButtonList extends React.Component {
 }
 ;
 
-window.shareRenderButtonList = function (dataClassifier) {
+window.shareRenderButtonList = function (tabdataClassifier) {
     ReactDOM.render(
-        <ButtonList dataClassifier={dataClassifier}/>,
+        <ButtonList dataClassifier={tabdataClassifier[0]} descriptionDataClassifier={tabdataClassifier[1]}/>,
         document.getElementById('classifier')
     );
 };
@@ -130,15 +131,21 @@ class Formul extends React.Component {
     constructor(props) {
         super(props);
         this.name = this.props.name;
+        this.dictDescriptionParamsClassifier = this.props.dictDescriptionParamsClassifier;
         this.idShape = this.props.idShape;
         this.state = this.props.dict; // trick replace state dict by dict params clasifier
         this.handleDelete = this.handleDelete.bind(this);
         this.handleChange = this.handleChange.bind(this);
+        this.handleInfo = this.handleInfo.bind(this);
     }
 
     handleChange(event) {
         this.setState({[event.target.name]: event.target.value});
         window.updateShapeParam(this.idShape, this.state);
+    }
+
+    handleInfo(event){
+        alert(this.dictDescriptionParamsClassifier[event.currentTarget.name]);
     }
 
     handleDelete(event) {
@@ -161,22 +168,25 @@ class Formul extends React.Component {
                 </div>
                 {Object.keys(this.state).map(name => {
                     return (
-                        <label key={'label' + name}> {name}
-                            <input type="text" name={name} value={this.state[name]} onChange={this.handleChange}
-                                   placeholder={this.state[name]} key={name}/>
-                        </label>
+                        <div  key={'row-'+name} className="row">
+                            <a className="btn-flat-tiny waves-effect waves-light" name={name} onClick={this.handleInfo} key={'btn-'+name}><i className="material-icons" name={name}>info_outline</i></a>
+                            <label key={'label-' + name}> {name}
+                                <input type="text" name={name} value={this.state[name]} onChange={this.handleChange}
+                                       placeholder={this.state[name]} key={name}/>
+                            </label>
+                        </div>
                     );
                 })}
             </form>
         );
     }
 }
-;
 
 
-window.shareRenderFormShape = function (dictParamsClassifier, nameClassifier, idShape) {
+window.shareRenderFormShape = function (dictParamsClassifier, dictDescriptionParamsClassifier, nameClassifier, idShape) {
     ReactDOM.render(
-        <Formul dict={dictParamsClassifier} name={nameClassifier} idShape={idShape}/>,
+        <Formul dict={dictParamsClassifier} name={nameClassifier} idShape={idShape}
+                dictDescriptionParamsClassifier={dictDescriptionParamsClassifier}/>,
         document.getElementById('formClassificator')
     );
 };

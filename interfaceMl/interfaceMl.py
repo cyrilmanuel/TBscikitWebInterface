@@ -57,7 +57,8 @@ def getDicoParams(instanceClassifier):
     for name, type_, descriptions in doc['Parameters']:
         types = types_re.match(type_)
         if types != None:
-            dico[name] = (type_map.get(types.group()), temp[name], descriptions)
+            completeDescription = str(type_) + "\n \n" + " ".join(str(e) for e in descriptions)
+            dico[name] = (type_map.get(types.group()), temp[name], completeDescription)
     return dico
 
 
