@@ -1,20 +1,23 @@
 # -*- coding: utf-8 -*-
 # all the imports
-
+import base64
 import os
 import pickle
 import re
 import traceback
+import matplotlib.pyplot as plt
+from io import BytesIO
 from ast import literal_eval
 from importlib import import_module
-
+from scikitplot import plotters as skplt
 from flask import Flask, request, redirect, url_for, \
-    render_template, flash, jsonify, send_file
+    render_template, flash, jsonify, send_file, make_response
 from flask_restful import Resource, Api
 from numpydoc.docscrape import NumpyDocString
 from sklearn.ensemble import VotingClassifier
 from sklearn.externals import joblib
 from sklearn.model_selection import cross_val_score
+from sklearn.naive_bayes import GaussianNB
 from sklearn.utils.testing import all_estimators
 
 import interfaceMl.extractSqlToPickle
@@ -82,13 +85,34 @@ for name, class_ in all_estimators():
         dictParamEstimator[name] = {key: v[1] for key, v in dictTypeEstimator[name].items()}
         dictDescriptionParam[name] = {key: v[2] for key, v in dictTypeEstimator[name].items()}
 
-class UseScikit2(Resource):
+
+class MatrixImage(Resource):
+    def get(self):
+        return send_file('DataSet/matrix.png',
+                     mimetype='image/png',
+                     attachment_filename='matrix.png',
+                     as_attachment=True)
+
+    def post(self):
+        receive_json = request.get_json()
+        for kdata, data in receive_json.items():
+            for k, v in data.items():
+                v.pop('resultat', None)
+                rf = dictEstimator[k]()
+                rf.set_params(**v)
+                rf.fit(x_data_filtered, y_data_filtered)
+                preds = rf.predict(x_data_filtered)
+                skplt.plot_confusion_matrix(y_true=y_data_filtered, y_pred=preds)
+                plt.title("Confusion Matrix for {0}".format(k))
+                plt.savefig('interfaceMl/DataSet/matrix.png')
+                return "OK"
+
+class PickleFile(Resource):
     def get(self):
         return send_file('DataSet/newModel.pkl',
-                  mimetype='application/python-pickle',
-                  attachment_filename='newModel.pkl',
-                  as_attachment=True)
-
+                         mimetype='application/python-pickle',
+                         attachment_filename='newModel.pkl',
+                         as_attachment=True)
     def post(self):
         receive_json = request.get_json()
         resultatf = {}
@@ -123,7 +147,11 @@ class UseScikit2(Resource):
             except Exception:
                 traceback.format_exc()
                 # return all result processed
-        return jsonify('succes')
+        return send_file('DataSet/newModel.pkl',
+                         mimetype='application/python-pickle',
+                         attachment_filename='newModel.pkl',
+                         as_attachment=True)
+
 
 class UseScikit(Resource):
     def get(self):
@@ -136,12 +164,11 @@ class UseScikit(Resource):
         # faire de calcul si il y sont. juste retourner la réponse
         listProcess.clear()
         receive_json = request.get_json()
-        resultatf = {}
+        resultatFinal = ""
 
         for nameClassifier, dictParams in receive_json.items():
 
             # TODO CHECK THE NAMECLASSIFIER IF ENSEMBLELEARNING DO THIS
-
             # TODO NEXT SUR ITEMS
             if (nameClassifier == 'ensemble Learning'):
                 print("ENSEMBLE LEARNING")
@@ -159,18 +186,15 @@ class UseScikit(Resource):
 
                         estimators.append((nameSubClass, clfChild))
 
-
                 try:
-
                     clfEnsemble = VotingClassifier(estimators)
-
                     scoresEnsemble = cross_val_score(clfEnsemble, x_data_filtered, y_data_filtered, cv=3)
                     print(" in TRY")
-                    resultatf[nameClassifier] = ("Accuracy: %0.2f (+/- %0.2f)" % (scoresEnsemble.mean(), scoresEnsemble.std() * 2))
+                    resultatFinal = ("Accuracy: %0.2f (+/- %0.2f)" % (scoresEnsemble.mean(), scoresEnsemble.std() * 2))
                     print(("Accuracy: %0.2f (+/- %0.2f)" % (scoresEnsemble.mean(), scoresEnsemble.std() * 2)))
                     print("fin")
                 except Exception:
-                    traceback.format_exc()
+                    resultatFinal = traceback.format_exc()
                     # return all result processed
 
             else:
@@ -191,7 +215,6 @@ class UseScikit(Resource):
                             valueParams = valueParams.title()
 
                         if dictTypeEstimator[nameClassifier][nameparams][0] != str:
-
                             valueConverted = literal_eval(valueParams)
                             print('value convert ast = {0}'.format(valueConverted))
                             newValue[nameparams] = dictTypeEstimator[nameClassifier][nameparams][0](valueConverted)
@@ -207,12 +230,13 @@ class UseScikit(Resource):
                     scores = cross_val_score(clf, x_data_filtered, y_data_filtered, cv=3)
 
                     # Stock the result into variable resultat
-                    resultatf[nameClassifier] = ("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
+                    resultatFinal = ("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
 
                 except Exception:
-                    traceback.format_exc()
+                    resultatFinal = traceback.format_exc()
                     # return all result processed
-        return jsonify(resultatf)
+            receive_json[nameClassifier]['resultat'] = resultatFinal
+        return jsonify(receive_json)
 
 
 def create_app():
@@ -234,7 +258,8 @@ def create_app():
     # route to process Scikit-learn
     api.add_resource(UseScikit, '/backend')
     # route to process Scikit-learn
-    api.add_resource(UseScikit2, '/getfile')
+    api.add_resource(PickleFile, '/index/getfile')
+    api.add_resource(MatrixImage, '/index/matrix')
 
     # define the route of the index
     @app.route('/index')
@@ -270,7 +295,6 @@ def create_app():
 
     # Load default config and override config from an environment variable
     app.config.from_envvar('INTERFACEML_SETTINGS', silent=True)
-
     return app
 
 # CHECK POST

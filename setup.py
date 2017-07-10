@@ -10,6 +10,7 @@ setup(
         'Flask-RESTful',
         'scikit-learn',
         'numpydoc',
+        'scikit-plot',
     ],
     setup_requires=[
         'pytest-runner',

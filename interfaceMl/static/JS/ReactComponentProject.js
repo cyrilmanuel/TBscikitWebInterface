@@ -137,15 +137,21 @@ class Formul extends React.Component {
         this.handleDelete = this.handleDelete.bind(this);
         this.handleChange = this.handleChange.bind(this);
         this.handleInfo = this.handleInfo.bind(this);
+        this.handleDownload = this.handleDownload.bind(this);
     }
 
     handleChange(event) {
-        this.setState({[event.target.name]: event.target.value});
-        window.updateShapeParam(this.idShape, this.state);
+        alert(event.target.value);
+        this.setState({[event.target.name]: event.target.value},()=>window.updateShapeParam(this.idShape, this.state));
+        //window.updateShapeParam(this.idShape, this.state);
     }
 
-    handleInfo(event){
+    handleInfo(event) {
         alert(this.dictDescriptionParamsClassifier[event.currentTarget.name]);
+    }
+
+    handleDownload(event){
+        window.startDownload(this.idShape);
     }
 
     handleDelete(event) {
@@ -161,19 +167,30 @@ class Formul extends React.Component {
         return (
             <form key="formParams">
                 <div className="row">
-                    <div className="col s12">
+                    <div className="col s6">
                         <a className="waves-effect waves-light btn" name="Delete" onClick={this.handleDelete}
                            key="Delete">Delete Shape</a>
+                    </div>
+                    <div className="col s6">
+                        <a className="waves-effect waves-light btn" name="DL" onClick={this.handleDownload}
+                           key="download">DL Model</a>
                     </div>
                 </div>
                 {Object.keys(this.state).map(name => {
                     return (
-                        <div  key={'row-'+name} className="row">
-                            <a className="btn-flat-tiny waves-effect waves-light" name={name} onClick={this.handleInfo} key={'btn-'+name}><i className="material-icons" name={name}>info_outline</i></a>
-                            <label key={'label-' + name}> {name}
-                                <input type="text" name={name} value={this.state[name]} onChange={this.handleChange}
+                        <div key={'row-' + name} className="row">
+                            <div className="col s6">
+                                <label key={'label-' + name} for={name}> {name}</label>
+                            </div>
+                            <div className="col s6">
+                                <a className="btn-flat-tiny waves-effect waves-light" name={name}
+                                   onClick={this.handleInfo} key={'btn-' + name}><i className="material-icons">info_outline</i></a>
+                            </div>
+                            <div className="col s12">
+                                <input type="text" name={name} value={this.state[name]} id={name}
+                                       onChange={this.handleChange}
                                        placeholder={this.state[name]} key={name}/>
-                            </label>
+                            </div>
                         </div>
                     );
                 })}
@@ -273,16 +290,37 @@ class ResultDiv extends React.Component {
         super(props);
         this.nbRender = this.props.nb;
         this.responseDict = this.props.dict || {};
-        this.tabResponseEmpty = Array.apply(null, {length: (this.nbRender - Object.keys(this.responseDict).length)}).map(Number.call, Number)
+        this.tabResponseEmpty = Array.apply(null, {length: (this.nbRender - Object.keys(this.responseDict).length)}).map(Number.call, Number);
+        this.handleShowMatrix = this.handleShowMatrix.bind(this);
+    }
+
+    handleShowMatrix(event) {
+
+        let data = {}
+        data[event.target.name] = this.responseDict[event.target.name];
+        axios.post('/index/matrix', {
+            params: data,
+        })
+            .then(function (response) {
+                window.renderMatrix(response);
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+
     }
 
     render() {
         let result = Object.keys(this.responseDict).map(name => {
                 return (
                     <div className="row">
-                        <div className="col s12">
-                            <div key={name}>Result for {name} {this.responseDict[name]}
+                        <div className="col s10">
+                            <div key={name}>Result for {name} {this.responseDict[name]['resultat']}
                             </div>
+                        </div>
+                        <div className="col s2">
+                            <a className="waves-effect waves-light btn-small" name={name} onClick={this.handleShowMatrix}
+                               key={"btnMatrix" + name}>Show Matrix</a>
                         </div>
                     </div>
                 );

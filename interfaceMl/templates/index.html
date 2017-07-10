@@ -8,13 +8,14 @@
     <script src="{{ url_for('static', filename='node_modules/react/dist/react.js') }}"></script>
     <script src="{{ url_for('static', filename='node_modules/react-dom/dist/react-dom.js') }}"></script>
     <script src="{{ url_for('static', filename='node_modules/createjs-module/vendor_modules/EaselJS-0.8.2/lib/easeljs-0.8.2.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='node_modules/axios/dist/axios.js') }}"></script>
     <script type="text/babel" src="{{ url_for('static', filename='JS/ReactComponentProject.js') }}"></script>
     <script src="{{ url_for('static', filename='JS/ShapeGenerator.js') }}"></script>
     <script src="{{ url_for('static', filename='JS/EnsembleShapeGenerator.js') }}"></script>
     <link rel="shortcut icon" href="">
     <link rel="stylesheet" href="{{ url_for('static', filename='node_modules/materialize-css/bin/materialize.css') }}">
     <script src="{{ url_for('static', filename='node_modules/materialize-css/bin/materialize.js') }}"></script>
-     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 
 <body onload="init();">
@@ -28,7 +29,7 @@
     </div>
     <div class="col s6">
         <div class="row">
-            <a class="waves-effect waves-light btn" onclick="startDownload()"> Export modele trained </a>
+
         </div>
         <canvas id="demoCanvas" width="600" height="600"
                 style="border: 1px solid black; width: 100%; height: 100% "></canvas>
@@ -126,7 +127,7 @@
                                 // 2 shape yello
                                 if (confirm('ensemble learning ?')) {
                                     const sizeCanvas = {"width": stage.canvas.width, "height": stage.canvas.height};
-                                    let ensembleShapeTemp = new EnsembleShapeGenerator(idShape.toString(), sizeCanvas, stage.getChildByName(nameShape).getDataDict(),stage.children[indexShape].getDataDict());
+                                    let ensembleShapeTemp = new EnsembleShapeGenerator(idShape.toString(), sizeCanvas, stage.getChildByName(nameShape).getDataDict(), stage.children[indexShape].getDataDict());
                                     stage.addChild(ensembleShapeTemp);
                                     removeShape(stage.children[indexShape].name);
                                     removeShape(nameShape);
@@ -135,12 +136,12 @@
                                 else {
                                     stage.getChildByName(nameShape).resetPositionShape();
                                 }
-                            }else {
+                            } else {
                                 // shape moved is yellow and shape under is ensemble
-                                if(confirm('add shape to ensemble ?')){
-                                stage.children[indexShape].addClassifier(stage.getChildByName(nameShape).getDataDict());
-                                removeShape(stage.getChildByName(nameShape).name);
-                                 }else {
+                                if (confirm('add shape to ensemble ?')) {
+                                    stage.children[indexShape].addClassifier(stage.getChildByName(nameShape).getDataDict());
+                                    removeShape(stage.getChildByName(nameShape).name);
+                                } else {
                                     stage.getChildByName(nameShape).resetPositionShape();
                                 }
                             }
@@ -153,7 +154,7 @@
         // ------------------------- func global for add shape to stage ---------------------
         window.addShape = function (nameClassifier, dictParamsClassifier, dictDescriptionParamsClassifier) {
             const sizeCanvas = {"width": stage.canvas.width, "height": stage.canvas.height};
-            let shapeTemp = new ShapeGenerator(idShape.toString(), nameClassifier, dictParamsClassifier,dictDescriptionParamsClassifier, sizeCanvas);
+            let shapeTemp = new ShapeGenerator(idShape.toString(), nameClassifier, dictParamsClassifier, dictDescriptionParamsClassifier, sizeCanvas);
             stage.addChild(shapeTemp);
             idShape++;
         };
@@ -185,7 +186,7 @@
 
         window.getAllChildren = function () {
             return stage.children;
-        }
+        };
         // -------------------------- return request --------------
         window.getDFS = function () {
             let res = {};
@@ -196,6 +197,23 @@
             }
             return res;
         };
+        window.startDownload = function (idShape) {
+            let dataToSend = stage.getChildByName(idShape).getDataDict();
+            $.ajax({
+                async: true,
+                url: 'index/getfile',
+                dataType: 'text',
+                type: 'post',
+                contentType: 'application/json',
+                data: JSON.stringify(dataToSend[0]),
+                success: function (dataReceive, textStatus, jQxhr) {
+                    window.open('index/getfile', 'Download');
+                },
+                error: function (jqXhr, textStatus, errorThrown) {
+                    console.log(errorThrown);
+                }
+            })
+        }
     }
 
 
@@ -222,6 +240,7 @@
                     success: function (dataReceive, textStatus, jQxhr) {
                         window.shareRenderResetResult();
                         let temp = JSON.parse(dataReceive);
+                        console.log(temp);
                         for (let i in temp) {
                             tabResult[i] = temp[i];
                         }
@@ -237,29 +256,9 @@
             Materialize.toast('all cross-validation done !', 3000, 'rounded');
         });
     });
-    function startDownload() {
-        let val = window.getAllChildren();
-        if (val.length == 1) {
-            let dataToSend = getDFS();
-            $.ajax({
-                async: true,
-                url: 'getfile',
-                dataType: 'text',
-                type: 'post',
-                contentType: 'application/json',
-                data: JSON.stringify(dataToSend[0]),
-                //data: JSON.stringify({"SVC": {"C": 1.0, "kernel": "rbf", "cache_size": 200, "tol": 0.001, "max_iter": -1, "class_weight": null, "shrinking": true, "degree": 3, "random_state": null, "coef0": 0.0, "decision_function_shape": null, "gamma": "auto", "probability": false, "verbose": false}}),
-                success: function (dataReceive, textStatus, jQxhr) {
-                    window.open('getfile', 'Download');
-                },
-                error: function (jqXhr, textStatus, errorThrown) {
-                    console.log(errorThrown);
-                }
-            })
-        }else{
-            alert("pls just one shape !");
-        }
 
+    window.renderMatrix = function (response) {
+        window.open('index/matrix', 'Image');
     }
 </script>
 </body>
