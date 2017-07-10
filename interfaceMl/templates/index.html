@@ -103,11 +103,18 @@
     function init() {
         let idShape = 0;
         // -------------------------- request Get in ajax ------------
-        $.getJSON("backend", function success(tabDataReceive) {
-                // generate button list with all name classifier
-                shareRenderButtonList(tabDataReceive);
+        $.ajax({
+            type: 'GET',
+            url: 'backend',
+            dataType: "json",
+            success: function (data) {
+                alert('succes');
+                shareRenderButtonList(data);
+            },
+            error: function (jqXhr, textStatus, errorThrown) {
+                console.log(errorThrown);
             }
-        );
+        });
 
         // --------------------------------- init canvas ---------------------
         let stage = new createjs.Stage("demoCanvas");

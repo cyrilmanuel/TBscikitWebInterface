@@ -59,6 +59,7 @@ class ButtonList extends React.Component {
 ;
 
 window.shareRenderButtonList = function (tabdataClassifier) {
+    alert(tabdataClassifier);
     ReactDOM.render(
         <ButtonList dataClassifier={tabdataClassifier[0]} descriptionDataClassifier={tabdataClassifier[1]}/>,
         document.getElementById('classifier')
@@ -143,7 +144,6 @@ class Formul extends React.Component {
     handleChange(event) {
         alert(event.target.value);
         this.setState({[event.target.name]: event.target.value},()=>window.updateShapeParam(this.idShape, this.state));
-        //window.updateShapeParam(this.idShape, this.state);
     }
 
     handleInfo(event) {

@@ -37,6 +37,13 @@ dictEstimator = {}
 # to store params estimator and name
 dictParamEstimator = {}
 dictDescriptionParam = {}
+
+dictTypeEstimatorRegr = {}
+dictEstimatorRegr = {}
+
+# to store params estimator and name
+dictParamEstimatorRegr = {}
+dictDescriptionParamRegr = {}
 # list object receive by post
 listProcess = [
 ]
@@ -53,20 +60,21 @@ def getDicoParams(instanceClassifier):
         'int': int,
         'integer': int,
         'float': float,
-        'dict': dict,
     }
     temp = instanceClassifier().get_params()
     doc = NumpyDocString("    " + instanceClassifier.__doc__)  # hack
     for name, type_, descriptions in doc['Parameters']:
         types = types_re.match(type_)
-        if types != None:
+        if types != None and temp[name]!="Infinity":
             completeDescription = str(type_) + "\n \n" + " ".join(str(e) for e in descriptions)
             dico[name] = (type_map.get(types.group()), temp[name], completeDescription)
     return dico
 
 
 for name, class_ in all_estimators():
-    if "_" not in name and str(getattr(class_, "_estimator_type", None)) == "classifier":
+    typeclass = str(getattr(class_, "_estimator_type", None))
+
+    if "_" not in name and typeclass == "classifier":
 
         # recup the module name and path of scikit
         modulePath = str(class_).split("'")[1]
@@ -84,6 +92,24 @@ for name, class_ in all_estimators():
         # stock the param of the classifier
         dictParamEstimator[name] = {key: v[1] for key, v in dictTypeEstimator[name].items()}
         dictDescriptionParam[name] = {key: v[2] for key, v in dictTypeEstimator[name].items()}
+    elif "_" not in name and typeclass == "regressor" and name != "LassoLarsIC" and name!="RANSACRegressor":
+
+        # recup the module name and path of scikit
+        modulePath = str(class_).split("'")[1]
+
+        # check if the name of the classifier is on the pass
+        # if it is, change the module path to delete the name and the dot
+        if name in modulePath :
+            # remove name on module import
+            dictEstimatorRegr[name] = getattr(import_module(modulePath.replace("." + name, '')), name)
+        else:
+            # great, let's push them
+            dictEstimatorRegr[name] = getattr(import_module(modulePath), name)
+
+        dictTypeEstimatorRegr[name] = getDicoParams(dictEstimatorRegr[name])
+        # stock the param of the classifier
+        dictParamEstimatorRegr[name] = {key: v[1] for key, v in dictTypeEstimatorRegr[name].items()}
+        dictDescriptionParamRegr[name] = {key: v[2] for key, v in dictTypeEstimatorRegr[name].items()}
 
 
 class MatrixImage(Resource):
@@ -156,8 +182,10 @@ class PickleFile(Resource):
 class UseScikit(Resource):
     def get(self):
         # return dictionnary {nameClassifier : {Params1:value1, Params2:value2}}
-        tab = [dictParamEstimator, dictDescriptionParam]
-        return jsonify(tab)
+        #tab = [dictParamEstimator, dictDescriptionParam]
+        data = {"regressor":[dictParamEstimatorRegr, dictDescriptionParamRegr],
+                "classifier": [dictParamEstimator, dictDescriptionParam]}
+        return jsonify(data)
 
     def post(self):
         # checker si les objets sont dans la liste et ne pas
