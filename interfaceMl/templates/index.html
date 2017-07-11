@@ -106,10 +106,10 @@
         $.ajax({
             type: 'GET',
             url: 'backend',
-            dataType: "json",
+            contentType: 'application/json',
             success: function (data) {
-                alert('succes');
-                shareRenderButtonList(data);
+                console.log(data);
+                shareRenderTypeOfButtonList(data);
             },
             error: function (jqXhr, textStatus, errorThrown) {
                 console.log(errorThrown);
@@ -159,9 +159,9 @@
         };
 
         // ------------------------- func global for add shape to stage ---------------------
-        window.addShape = function (nameClassifier, dictParamsClassifier, dictDescriptionParamsClassifier) {
+        window.addShape = function (nameClassifier, dictParamsClassifier, dictDescriptionParamsClassifier, typeOfClassifier) {
             const sizeCanvas = {"width": stage.canvas.width, "height": stage.canvas.height};
-            let shapeTemp = new ShapeGenerator(idShape.toString(), nameClassifier, dictParamsClassifier, dictDescriptionParamsClassifier, sizeCanvas);
+            let shapeTemp = new ShapeGenerator(idShape.toString(), nameClassifier, dictParamsClassifier, dictDescriptionParamsClassifier, sizeCanvas, typeOfClassifier);
             stage.addChild(shapeTemp);
             idShape++;
         };

@@ -4,23 +4,26 @@
 class TypeOfButtonList extends React.Component {
     constructor(props) {
         super(props);
+        this.dataClassifier = this.props.dataClassifier;
         this.typeOfClassifier = this.props.typeOfClassifier;
         this.onClick = this.onClick.bind(this);
     }
 
     onClick(event) {
-        event.target.id
+        window.shareRenderButtonList(this.dataClassifier, event.target.name);
     }
 
     render() {
-        let rows = Object.keys(this.typeOfClassifier).map(name => {
+        let rows = Object.keys(this.dataClassifier).map(name => {
             return (
-                <a className="collection-item" onClick={this.onClick} id={name}
+                <a className="collection-item" onClick={this.onClick} name={name}
                    key={name}>{name}</a>
             );
         });
         return (
+        <div className="row">
             <div className="collection">{rows}</div>
+            </div>
         );
     }
 }
@@ -35,13 +38,21 @@ window.shareRenderTypeOfButtonList = function (dataClassifier) {
 class ButtonList extends React.Component {
     constructor(props) {
         super(props);
-        this.descriptionDataClassifier = this.props.descriptionDataClassifier;
-        this.dataClassifier = this.props.dataClassifier;
+        this.allDataClassifier = this.props.allDataClassifier;
+        this.typeOfDataClassifier= this.props.typeOfDataClassifier;
+        this.descriptionDataClassifier =this.allDataClassifier[this.typeOfDataClassifier][1];
+        this.dataClassifier = this.allDataClassifier[this.typeOfDataClassifier][0];
         this.onClick = this.onClick.bind(this);
+        this.handleReturn = this.handleReturn.bind(this);
+    }
+
+    handleReturn(event){
+      shareRenderResetButtonList();
+      shareRenderTypeOfButtonList(this.allDataClassifier);
     }
 
     onClick(event) {
-        window.addShape(event.target.id, this.props.dataClassifier[event.target.id], this.props.descriptionDataClassifier[event.target.id]);
+        window.addShape(event.target.id, this.dataClassifier[event.target.id], this.descriptionDataClassifier[event.target.id],this.typeOfDataClassifier);
     }
 
     render() {
@@ -52,16 +63,26 @@ class ButtonList extends React.Component {
             );
         });
         return (
+            <div className="row">
+                <a className="waves-effect waves-light btn" name="return" onClick={this.handleReturn}
+                   key="return">Return</a>
             <div className="collection">{rows}</div>
+            </div>
         );
     }
 }
 ;
 
-window.shareRenderButtonList = function (tabdataClassifier) {
-    alert(tabdataClassifier);
+window.shareRenderButtonList = function (allDataClassifier, typeOfDataClassifier) {
     ReactDOM.render(
-        <ButtonList dataClassifier={tabdataClassifier[0]} descriptionDataClassifier={tabdataClassifier[1]}/>,
+        <ButtonList allDataClassifier={allDataClassifier} typeOfDataClassifier={typeOfDataClassifier}/>,
+        document.getElementById('classifier')
+    );
+};
+
+window.shareRenderResetButtonList = function () {
+    ReactDOM.render(
+        <div></div>,
         document.getElementById('classifier')
     );
 };

@@ -1,12 +1,12 @@
 (function () {
 
     // constructor shape
-    function ShapeGenerator(nameOfficeID, nameClassifier, dictParamsClassifier, dictDescriptionParamsClassifier, sizeCanvas) {
+    function ShapeGenerator(nameOfficeID, nameClassifier, dictParamsClassifier, dictDescriptionParamsClassifier, sizeCanvas, typeOfClassifier) {
         this.Container_constructor();
         // stock the name of the classifier this shape will be repr
         this.name = nameOfficeID.toString();
 
-        this.typeOfClassifier = "";
+        this.typeOfClassifier = typeOfClassifier;
         // stock the params of the classifier into the shape
         // because this shape can call the function to render
         // with React, a approprieted form
@@ -35,8 +35,23 @@
         text.y = -1 * text.getMeasuredHeight() / 2;
 
         var background = new createjs.Shape();
-        // var color = '#' + (0x1000000 + (Math.random()) * 0xffffff).toString(16).substr(1, 6);
-        var color = '#fff700';
+
+        var color = '';
+
+        switch (this.typeOfClassifier) {
+            case "classifier":
+                color = "#fff700";
+                break;
+
+            case "regressor":
+                color = "#ffa0af";
+                break;
+
+            default:
+                color = "#00ff00";
+                break;
+        }
+
         background.graphics.beginFill(color).drawCircle(0, 0, 50);
         this.addChild(background, text);
 
