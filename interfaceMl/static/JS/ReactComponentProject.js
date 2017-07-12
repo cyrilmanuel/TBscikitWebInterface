@@ -243,9 +243,8 @@ class FormEnsemble extends React.Component {
     }
 
     handleChange(event) {
-        this.setState({[event.target.name]: event.target.value});
-        window.updateShapeEnsembleParam(this.idShape, this.state, this.props.idShapeParent);
-    }
+        this.setState({[event.target.name]: event.target.value},()=>window.updateShapeEnsembleParam(this.idShape, this.state, this.props.idShapeParent));
+         }
 
     handleDelete(event) {
         if (confirm('Are you sure you want to remove the shape ' + this.name + '?')) {

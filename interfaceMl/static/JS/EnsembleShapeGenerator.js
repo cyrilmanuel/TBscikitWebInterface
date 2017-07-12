@@ -1,13 +1,13 @@
 (function () {
 
     // constructor shape
-    function EnsembleShapeGenerator(nameOfficeID, sizeCanvas, dictClassifier1, dictClassifier2) {
+    function EnsembleShapeGenerator(nameOfficeID, sizeCanvas, dictClassifier1, dictClassifier2, typeOfClassifier) {
         this.Container_constructor();
         // stock the name of the classifier this shape will be repr
         this.name = nameOfficeID.toString();
 
         this.offset = 0;
-
+        this.typeOfClassifier = typeOfClassifier;
         this.idSubShapeGenerator = 0;
         // stock the params of the classifier into the shape
         // because this shape can call the function to render
@@ -15,6 +15,7 @@
         this.dicParamsClassifier = {};
         this.nameClassifier = "ensemble Learning";
 
+        this.color = "";
         // size of canvas to psh on center
         this.sizeCanvas = sizeCanvas;
 
@@ -36,8 +37,23 @@
         this.offset = text.getMeasuredHeight() + 5;
 
         var background = new createjs.Shape();
-        var color = '#10ffee';
-        background.graphics.beginFill(color).drawRoundRect(0, 0, 150, 100, 15);
+
+        switch (this.typeOfClassifier) {
+            case "classifier":
+                this.color = "#10ffee";
+                break;
+
+            case "regressor":
+                this.color = "#a4ffa4";
+                break;
+
+            default:
+                this.color = "#ffff00";
+                break;
+        }
+        background.graphics.beginFill(this.color).drawRoundRect(0, 0, 150, 80, 15);
+        background.name = "background";
+        background.graphics.height = 50;
         this.addChild(background, text);
 
         // define function for interaction
@@ -72,9 +88,24 @@
     p.addClassifier = function (dictClassifier) {
         let containerTemp = new createjs.Container();
         containerTemp.x = 0;
-        containerTemp.y = this.offset + this.idSubShapeGenerator * 25;
+        containerTemp.y = this.offset + (this.children.length - 2) * 25;
         let backgroundTemp = new createjs.Shape();
-        let colorTemp = '#fff700';
+
+        var colorTemp = '';
+
+        switch (this.typeOfClassifier) {
+            case "classifier":
+                colorTemp = "#fff700";
+                break;
+
+            case "regressor":
+                colorTemp = "#ffa0af";
+                break;
+
+            default:
+                colorTemp = "#00ff00";
+                break;
+        }
         backgroundTemp.graphics.beginFill(colorTemp).drawRoundRect(0, 0, 150, 20, 10);
         containerTemp.name = this.idSubShapeGenerator;
         let textTemp = new createjs.Text(Object.keys(dictClassifier)[0].replace(/([A-Z])/g, ' $1').trim(), "15px Arial", "#000");
@@ -85,6 +116,7 @@
         containerTemp.addChild(backgroundTemp, textTemp);
         this.addChild(containerTemp);
         this.idSubShapeGenerator++;
+        this.getChildByName("background").graphics.clear().beginFill(this.color).drawRoundRect(0, 0, 150, ((this.children.length -1) * 25), 15);
     };
     // return dict containe name of classifier and dict with params of classifier
     // like this {name : {Params1:value1, Params2:value2}}
@@ -99,21 +131,30 @@
     };
 
     p.removeSubShape = function (idShapeChild) {
+        var isFindChild = false;
+        let childNumberIndex = 0;
         if (this.children.length <= 3) {
             window.removeShape(this.name);
         } else {
             for (let child in this.children) {
+                console.log(this.children[child].name);
+                console.log(idShapeChild);
+                console.log(this.children.length);
                 if (this.children[child].name == idShapeChild) {
-                    this.removeChild(this.children[child]);
+                    childNumberIndex = child;
                     delete this.dicParamsClassifier[idShapeChild];
                     shareRenderInitFormulaireShape();
-                    break;
+                    isFindChild = true;
+                } else {
+                    if (isFindChild == true) {
+                        this.children[child].y -= 25;
+                    }
                 }
             }
+            this.removeChild(this.children[childNumberIndex]);
+            this.getChildByName("background").graphics.clear().beginFill(this.color).drawRoundRect(0, 0, 150, ((this.children.length -1) * 25), 15);
         }
     };
-
-
     // create window function. when, i can create shape in a script on the page index.html
     window.EnsembleShapeGenerator = createjs.promote(EnsembleShapeGenerator, "Container");
 }());
