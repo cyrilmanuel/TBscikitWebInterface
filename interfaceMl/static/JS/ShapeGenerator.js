@@ -24,19 +24,19 @@
     }
 
     // extend of container to create round shape with name inside
-    var p = createjs.extend(ShapeGenerator, createjs.Container);
+    let p = createjs.extend(ShapeGenerator, createjs.Container);
 
     // setup the shape
     p.setup = function () {
-        var text = new createjs.Text(this.nameClassifier.replace(/([A-Z])/g, ' $1').trim()+"\nID:"+this.name, "20px Arial", "#000");
+        let text = new createjs.Text(this.nameClassifier.replace(/([A-Z])/g, ' $1').trim() + "\nID:" + this.name, "20px Arial", "#000");
         text.textAlign = "center";
         text.maxWidth = 100;
         text.lineWidth = 100;
         text.y = -1 * text.getMeasuredHeight() / 2;
 
-        var background = new createjs.Shape();
+        let background = new createjs.Shape();
 
-        var color = '';
+        let color = '';
 
         switch (this.typeOfClassifier) {
             case "classifier":
@@ -73,15 +73,15 @@
         this.y = this.sizeCanvas["height"] / 2;
     };
 
-    p.handleClick = function (event) {
+    p.handleClick = function () {
         if (this.isStateClick) {
             shareRenderInitFormulaireShape();
             shareRenderFormShape(this.dicParamsClassifier, this.dictDescriptionParamsClassifier, this.nameClassifier, this.name);
         }
     };
 
-    p.handlePressUp = function (event) {
-        if (this.isStateClick == false) {
+    p.handlePressUp = function () {
+        if (this.isStateClick === false) {
             window.hitShape(this.name);
         }
         this.isStateClick = true;
@@ -97,12 +97,13 @@
     // return dict containe name of classifier and dict with params of classifier
     // like this {name : {Params1:value1, Params2:value2}}
     p.getDataDict = function () {
-        var temp = {};
+        let temp = {};
+        this.dicParamsClassifier["typeOf"] = this.typeOfClassifier;
         temp[this.nameClassifier] = this.dicParamsClassifier;
         return temp;
     };
     p.getDescriptionDict = function () {
-        var temp = {};
+        let temp = {};
         temp[this.nameClassifier] = this.dictDescriptionParamsClassifier;
         return temp;
     };

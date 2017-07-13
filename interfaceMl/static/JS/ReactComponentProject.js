@@ -225,6 +225,7 @@ class Formul extends React.Component {
 
 
 window.shareRenderFormShape = function (dictParamsClassifier, dictDescriptionParamsClassifier, nameClassifier, idShape) {
+    delete dictParamsClassifier["typeOf"];
     ReactDOM.render(
         <Formul dict={dictParamsClassifier} name={nameClassifier} idShape={idShape}
                 dictDescriptionParamsClassifier={dictDescriptionParamsClassifier}/>,
@@ -314,6 +315,7 @@ class FormEnsemble extends React.Component {
 ;
 
 window.shareRenderFormEnsemble = function (dictParamsClassifier,dictDescriptionParamsClassifier, nameClassifier, idShape, idShapeParent, dictAllClassifier,dictAllDescription) {
+    delete dictParamsClassifier["typeOf"];
     ReactDOM.render(
         <FormEnsemble dict={dictParamsClassifier} name={nameClassifier} idShape={idShape}
                       idShapeParent={idShapeParent} dictAllClassifier={dictAllClassifier}
@@ -399,7 +401,7 @@ class ResultDiv extends React.Component {
         );
     }
 }
-;
+
 
 window.shareRenderResult = function (DictResultPost, nbResult) {
     ReactDOM.render(

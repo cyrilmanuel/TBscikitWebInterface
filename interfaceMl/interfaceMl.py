@@ -7,6 +7,7 @@ import traceback
 from ast import literal_eval
 from importlib import import_module
 import matplotlib.pyplot as plt
+import sys
 from scikitplot import plotters as skplt
 from numpydoc.docscrape import NumpyDocString
 from flask import Flask, request, redirect, url_for, \
@@ -45,6 +46,7 @@ dictDescriptionParamRegr = {}
 listProcess = [
 ]
 
+
 def getDicoParams(instanceClassifier):
     dico = {}
     types_re = re.compile(r"(?P<type>(float|int(eger)?|str(ing)?|bool(ean)?))")
@@ -68,7 +70,6 @@ def getDicoParams(instanceClassifier):
 
         # Check if the type was finded and if is not equal to "Infinity"
         if types != None and classifierTemp[name] != "Infinity":
-
             # Creates a complete description for this params
             completeDescription = str(type_) + "\n \n" + " ".join(str(e) for e in descriptions)
 
@@ -163,32 +164,65 @@ class PickleFile(Resource):
         print(receive_json)
         for nameClassifier, dictParams in receive_json.items():
             newValue = {}
-            for nameparams, valueParams, in dictParams.items():
-                # check if data diff to défault data
-                print(valueParams)
-                if valueParams == "":
-                    print('value empty replaced by default')
-                    newValue[nameparams] = dictParamEstimator[nameClassifier][nameparams]
-                elif valueParams != dictParamEstimator[nameClassifier][nameparams]:
-                    print('value not empty and not equal to default. change type to type in docstring')
-                    # TODO verifie all type true false and int float sended by client
-                    # TODO because he not work when params change in str convert by literal_eval.
-                    # TODO change evaluation of the different params.
-                    valueConverted = literal_eval(valueParams)
-                    print('value convert ast = {0}'.format(valueConverted))
-                    newValue[nameparams] = dictTypeEstimator[nameClassifier][nameparams][0](valueConverted)
-                    print('valeur convert selons dico type= {0}'.format(newValue[nameparams]))
+            typeOfClassifier = dictParams.pop('typeOf', None)
+
+            if (typeOfClassifier == "classifier"):
+                for nameparams, valueParams, in dictParams.items():
+                    # best way to check if empty or blank
+                    if type(valueParams) == str and not (valueParams and valueParams.strip()):
+                        print('value empty replaced by default')
+                        newValue[nameparams] = dictParamEstimator[nameClassifier][nameparams]
+
+                    elif valueParams != dictParamEstimator[nameClassifier][nameparams]:
+                        # in this state, valueParams = str and different to the default value of the params
+                        print('value not empty and not equal to default. change type to type in docstring')
+                        if dictTypeEstimator[nameClassifier][nameparams][0] == bool:
+                            valueParams = valueParams.title()
+
+                        if dictTypeEstimator[nameClassifier][nameparams][0] != str:
+                            valueConverted = literal_eval(valueParams)
+                            print('value convert ast = {0}'.format(valueConverted))
+                            newValue[nameparams] = dictTypeEstimator[nameClassifier][nameparams][0](valueConverted)
+                            print('valeur convert selons dico type= {0}'.format(newValue[nameparams]))
+
+            elif (typeOfClassifier == "regressor"):
+                for nameparams, valueParams, in dictParams.items():
+                    # best way to check if empty or blank
+                    if type(valueParams) == str and not (valueParams and valueParams.strip()):
+                        print('value empty replaced by default')
+                        newValue[nameparams] = dictParamEstimatorRegr[nameClassifier][nameparams]
+
+                    elif valueParams != dictParamEstimatorRegr[nameClassifier][nameparams]:
+                        # in this state, valueParams = str and different to the default value of the params
+                        print('value not empty and not equal to default. change type to type in docstring')
+                        if dictTypeEstimatorRegr[nameClassifier][nameparams][0] == bool:
+                            valueParams = valueParams.title()
+
+                        if dictTypeEstimatorRegr[nameClassifier][nameparams][0] != str:
+                            valueConverted = literal_eval(valueParams)
+                            print('value convert ast = {0}'.format(valueConverted))
+                            newValue[nameparams] = dictTypeEstimatorRegr[nameClassifier][nameparams][0](
+                                valueConverted)
+                            print('valeur convert selons dico type= {0}'.format(newValue[nameparams]))
+
             try:
-                # create the classificator
-                clf = dictEstimator[nameClassifier]()
-                # send params issue by the request
-                clf.set_params(**newValue)
+                if typeOfClassifier == "classifier":
+                    # create the classificator
+                    clf = dictEstimator[nameClassifier]()
+                    # send params issue by the request
+                    clf.set_params(**newValue)
+
+                elif typeOfClassifier == "regressor":
+                    # create the classificator
+                    clf = dictEstimatorRegr[nameClassifier]()
+                    # send params issue by the request
+                    clf.set_params(**newValue)
 
                 clf.fit(x_data_filtered, y_data_filtered)
                 joblib.dump(clf, 'interfaceMl/DataSet/newModel.pkl')
 
             except Exception:
-                traceback.format_exc()
+                print(traceback.format_exc())
                 # return all result processed
         return send_file('DataSet/newModel.pkl',
                          mimetype='application/python-pickle',
@@ -212,70 +246,159 @@ class UseScikit(Resource):
         resultatFinal = ""
 
         for nameClassifier, dictParams in receive_json.items():
-
-            # TODO CHECK THE NAMECLASSIFIER IF ENSEMBLELEARNING DO THIS
-            # TODO NEXT SUR ITEMS
             if (nameClassifier == 'ensemble Learning'):
                 print("ENSEMBLE LEARNING")
-                newValue = {}
+                print(dictParams)
                 estimators = []
+                typeOfClassifier = ""
                 for index, classifier, in dictParams.items():
-                    for nameSubClass, valueParams, in classifier.items():
-                        print(nameSubClass)
-                        print("------------")
-                        print(valueParams)
+                    for nameSubClass, dicoValueParams, in classifier.items():
+                        typeOfClassifier = dicoValueParams.pop('typeOf', None)
+                        newValue = {}
+                        # ----------------------------
+                        if (typeOfClassifier == "classifier"):
+                            for nameparams, valueParams, in dicoValueParams.items():
+                                # best way to check if empty or blank
+                                if type(valueParams) == str and not (valueParams and valueParams.strip()):
+                                    print('value empty replaced by default')
+                                    newValue[nameparams] = dictParamEstimator[nameSubClass][nameparams]
 
-                        clfChild = dictEstimator[nameSubClass]()
-                        # send params issue by the request
-                        clfChild.set_params(**valueParams)
+                                elif valueParams != dictParamEstimator[nameSubClass][nameparams]:
+                                    # in this state, valueParams = str and different to the default value of the params
+                                    print('value not empty and not equal to default. change type to type in docstring')
+                                    if dictTypeEstimator[nameSubClass][nameparams][0] == bool:
+                                        valueParams = valueParams.title()
 
-                        estimators.append((nameSubClass, clfChild))
+                                    if dictTypeEstimator[nameSubClass][nameparams][0] != str:
+                                        valueConverted = literal_eval(valueParams)
+                                        print('value convert ast = {0}'.format(valueConverted))
+                                        newValue[nameparams] = dictTypeEstimator[nameSubClass][nameparams][0](
+                                            valueConverted)
+                                        print('valeur convert selons dico type= {0}'.format(newValue[nameparams]))
+                            clfChild = dictEstimator[nameSubClass]()
+                            # send params issue by the request
+                            clfChild.set_params(**newValue)
+
+                            estimators.append((nameSubClass, clfChild))
+
+                        elif (typeOfClassifier == "regressor"):
+                            for nameparams, valueParams, in dicoValueParams.items():
+                                # best way to check if empty or blank
+                                if type(valueParams) == str and not (valueParams and valueParams.strip()):
+                                    print('value empty replaced by default')
+                                    newValue[nameparams] = dictParamEstimatorRegr[nameSubClass][nameparams]
+
+                                elif valueParams != dictParamEstimatorRegr[nameSubClass][nameparams]:
+                                    # in this state, valueParams = str and different to the default value of the params
+                                    print('value not empty and not equal to default. change type to type in docstring')
+                                    if dictTypeEstimatorRegr[nameSubClass][nameparams][0] == bool:
+                                        valueParams = valueParams.title()
+
+                                    if dictTypeEstimatorRegr[nameSubClass][nameparams][0] != str:
+                                        valueConverted = literal_eval(valueParams)
+                                        print('value convert ast = {0}'.format(valueConverted))
+                                        newValue[nameparams] = dictTypeEstimatorRegr[nameSubClass][nameparams][0](
+                                            valueConverted)
+                                        print('valeur convert selons dico type= {0}'.format(newValue[nameparams]))
+
+                            clfChild = dictEstimatorRegr[nameSubClass]()
+                            # send params issue by the request
+                            clfChild.set_params(**newValue)
+
+                            estimators.append((nameSubClass, clfChild))
+
 
                 try:
                     clfEnsemble = VotingClassifier(estimators)
-                    scoresEnsemble = cross_val_score(clfEnsemble, x_data_filtered, y_data_filtered, cv=3)
-                    print(" in TRY")
-                    resultatFinal = ("Accuracy: %0.2f (+/- %0.2f)" % (scoresEnsemble.mean(), scoresEnsemble.std() * 2))
-                    print(("Accuracy: %0.2f (+/- %0.2f)" % (scoresEnsemble.mean(), scoresEnsemble.std() * 2)))
-                    print("fin")
+
+                    if typeOfClassifier == "classifier":
+
+                        # évaluate the scoring
+                        scores = cross_val_score(clfEnsemble, x_data_filtered, y_data_filtered, cv=3)
+
+                        # Stock the result into variable resultat
+                        resultatFinal = ("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
+
+                    elif typeOfClassifier == "regressor":
+
+                        # évaluate the scoring
+                        scores = cross_val_score(clfEnsemble, x_data_filtered, y_data_filtered,
+                                                 cv=3)
+
+                        # Stock the result into variable resultat
+                        resultatFinal = ("Accuracy: %0.2f" % (scores.mean()))
+
                 except Exception:
                     resultatFinal = traceback.format_exc()
                     # return all result processed
 
             else:
                 newValue = {}
-                for nameparams, valueParams, in dictParams.items():
-                    # check if data diff to défault data
-                    print("params name : {0} value = ".format(nameparams))
-                    print(valueParams)
-                    # best way to check if empty or blank
-                    if type(valueParams) == str and not (valueParams and valueParams.strip()):
-                        print('value empty replaced by default')
-                        newValue[nameparams] = dictParamEstimator[nameClassifier][nameparams]
+                typeOfClassifier = dictParams.pop('typeOf', None)
 
-                    elif valueParams != dictParamEstimator[nameClassifier][nameparams]:
-                        # in this state, valueParams = str and different to the default value of the params
-                        print('value not empty and not equal to default. change type to type in docstring')
-                        if dictTypeEstimator[nameClassifier][nameparams][0] == bool:
-                            valueParams = valueParams.title()
+                if (typeOfClassifier == "classifier"):
+                    for nameparams, valueParams, in dictParams.items():
+                        # best way to check if empty or blank
+                        if type(valueParams) == str and not (valueParams and valueParams.strip()):
+                            print('value empty replaced by default')
+                            newValue[nameparams] = dictParamEstimator[nameClassifier][nameparams]
 
-                        if dictTypeEstimator[nameClassifier][nameparams][0] != str:
-                            valueConverted = literal_eval(valueParams)
-                            print('value convert ast = {0}'.format(valueConverted))
-                            newValue[nameparams] = dictTypeEstimator[nameClassifier][nameparams][0](valueConverted)
-                            print('valeur convert selons dico type= {0}'.format(newValue[nameparams]))
+                        elif valueParams != dictParamEstimator[nameClassifier][nameparams]:
+                            # in this state, valueParams = str and different to the default value of the params
+                            print('value not empty and not equal to default. change type to type in docstring')
+                            if dictTypeEstimator[nameClassifier][nameparams][0] == bool:
+                                valueParams = valueParams.title()
+
+                            if dictTypeEstimator[nameClassifier][nameparams][0] != str:
+                                valueConverted = literal_eval(valueParams)
+                                print('value convert ast = {0}'.format(valueConverted))
+                                newValue[nameparams] = dictTypeEstimator[nameClassifier][nameparams][0](valueConverted)
+                                print('valeur convert selons dico type= {0}'.format(newValue[nameparams]))
+
+                elif (typeOfClassifier == "regressor"):
+                    for nameparams, valueParams, in dictParams.items():
+                        # best way to check if empty or blank
+                        if type(valueParams) == str and not (valueParams and valueParams.strip()):
+                            print('value empty replaced by default')
+                            newValue[nameparams] = dictParamEstimatorRegr[nameClassifier][nameparams]
+
+                        elif valueParams != dictParamEstimatorRegr[nameClassifier][nameparams]:
+                            # in this state, valueParams = str and different to the default value of the params
+                            print('value not empty and not equal to default. change type to type in docstring')
+                            if dictTypeEstimatorRegr[nameClassifier][nameparams][0] == bool:
+                                valueParams = valueParams.title()
+
+                            if dictTypeEstimatorRegr[nameClassifier][nameparams][0] != str:
+                                valueConverted = literal_eval(valueParams)
+                                print('value convert ast = {0}'.format(valueConverted))
+                                newValue[nameparams] = dictTypeEstimatorRegr[nameClassifier][nameparams][0](
+                                    valueConverted)
+                                print('valeur convert selons dico type= {0}'.format(newValue[nameparams]))
 
                 try:
-                    # create the classificator
-                    clf = dictEstimator[nameClassifier]()
-                    # send params issue by the request
-                    clf.set_params(**newValue)
+                    if typeOfClassifier == "classifier":
+                        # create the classificator
+                        clf = dictEstimator[nameClassifier]()
+                        # send params issue by the request
+                        clf.set_params(**newValue)
+                        # évaluate the scoring
+                        scores = cross_val_score(clf, x_data_filtered, y_data_filtered, cv=3)
 
-                    # évaluate the scoring
-                    scores = cross_val_score(clf, x_data_filtered, y_data_filtered, cv=3)
+                        # Stock the result into variable resultat
+                        resultatFinal = ("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
 
-                    # Stock the result into variable resultat
-                    resultatFinal = ("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
+                    elif typeOfClassifier == "regressor":
+                        # create the classificator
+                        clf = dictEstimatorRegr[nameClassifier]()
+                        # send params issue by the request
+                        clf.set_params(**newValue)
+                        # évaluate the scoring
+                        scores = cross_val_score(clf, x_data_filtered, y_data_filtered, scoring='mean_squared_error',
+                                                 cv=3)
+
+                        # Stock the result into variable resultat
+                        resultatFinal = ("Accuracy: %0.2f" % (scores.mean()))
+
 
                 except Exception:
                     resultatFinal = traceback.format_exc()

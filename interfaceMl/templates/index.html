@@ -74,31 +74,6 @@
     </div>
 </div>
 <script>
-    let Colors = {
-        aqua: "#00ffff",
-        azure: "#f0ffff",
-        beige: "#f5f5dc",
-        blue: "#0000ff",
-        brown: "#a52a2a",
-        cyan: "#00ffff",
-        fuchsia: "#ff00ff",
-        gold: "#ffd700",
-        green: "#008000",
-        khaki: "#f0e68c",
-        lightblue: "#add8e6",
-        lightcyan: "#e0ffff",
-        lightgreen: "#90ee90",
-        lightgrey: "#d3d3d3",
-        lightpink: "#ffb6c1",
-        lightyellow: "#ffffe0",
-        lime: "#00ff00",
-        orange: "#ffa500",
-        pink: "#ffc0cb",
-        red: "#ff0000",
-        silver: "#c0c0c0",
-        white: "#ffffff",
-        yellow: "#ffff00"
-    };
     // --------------------------------- initialisation of the canvas --------------
     function init() {
         let idShape = 0;
@@ -117,20 +92,18 @@
 
         // --------------------------------- init canvas ---------------------
         let stage = new createjs.Stage("demoCanvas");
-        createjs.Ticker.addEventListener("tick", handleTick);
+        createjs.Ticker.addEventListener("tick", function handleTick(){stage.update()});
 
-        function handleTick() {
-            stage.update();
-        }
+
 
         window.hitShape = function (nameShape) {
-            if (stage.getChildByName(nameShape).nameClassifier != "Ensemble Learning") {
+            if (stage.getChildByName(nameShape).nameClassifier !== "Ensemble Learning") {
                 for (let indexShape in stage.children) {
                     if (stage.children[indexShape].name !== nameShape) {
                         let pt = stage.getChildByName(nameShape).localToLocal(0, 0, stage.children[indexShape]);
                         if (stage.children[indexShape].hitTest(pt.x, pt.y)) {
-                            if (stage.children[indexShape].nameClassifier != "ensemble Learning") {
-                                if (stage.children[indexShape].typeOfClassifier == stage.getChildByName(nameShape).typeOfClassifier) {
+                            if (stage.children[indexShape].nameClassifier !== "ensemble Learning") {
+                                if (stage.children[indexShape].typeOfClassifier === stage.getChildByName(nameShape).typeOfClassifier) {
                                     // 2 shape yello
                                     if (confirm('ensemble learning ?')) {
                                         const sizeCanvas = {"width": stage.canvas.width, "height": stage.canvas.height};
@@ -146,7 +119,7 @@
                                 }
                             } else {
                                 // shape moved is yellow and shape under is ensemble
-                                if (stage.children[indexShape].typeOfClassifier == stage.getChildByName(nameShape).typeOfClassifier) {
+                                if (stage.children[indexShape].typeOfClassifier === stage.getChildByName(nameShape).typeOfClassifier) {
                                     //same type classifier
                                     if (confirm('add shape to ensemble ?')) {
                                         stage.children[indexShape].addClassifier(stage.getChildByName(nameShape).getDataDict());
@@ -169,10 +142,6 @@
             stage.addChild(shapeTemp);
             idShape++;
         };
-        window.CreateEnsembleShape = function (nameClassifier, dictParamsClassifier) {
-            idShape++;
-        };
-
         window.removeShape = function (idShape) {
             stage.removeChild(stage.getChildByName(idShape));
             shareRenderInitFormulaireShape();
@@ -260,7 +229,7 @@
             )
         });
         $.when.apply(undefined, arr).then(function () {
-            if (tabtest.length == 0) {
+            if (tabtest.length === 0) {
                 shareRenderResetResult();
                 Materialize.toast('Nothing to process !', 3000, 'rounded');
             } else {
@@ -270,7 +239,7 @@
 
     });
 
-    window.renderMatrix = function (response) {
+    window.renderMatrix = function () {
         window.open('index/matrix', 'Image');
     }
 </script>

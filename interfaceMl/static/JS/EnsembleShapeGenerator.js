@@ -28,18 +28,18 @@
     }
 
     // extend of container to create round shape with name inside
-    var p = createjs.extend(EnsembleShapeGenerator, createjs.Container);
+    let p = createjs.extend(EnsembleShapeGenerator, createjs.Container);
 
     // setup the shape
     p.setup = function () {
-        var text = new createjs.Text(this.nameClassifier+"\nID:"+this.name, "20px Arial", "#000");
+        let text = new createjs.Text(this.nameClassifier+"\nID:"+this.name, "20px Arial", "#000");
         text.maxWidth = 150;
         text.textAlign = "center";
         text.y = 0;
         text.x = 75;
         this.offset = text.getMeasuredHeight() + 5;
 
-        var background = new createjs.Shape();
+        let background = new createjs.Shape();
 
         switch (this.typeOfClassifier) {
             case "classifier":
@@ -82,7 +82,7 @@
         this.isStateClick = false;
     };
 
-    p.handleClick = function (event) {
+    p.handleClick = function () {
         shareRenderInitFormulaireShape();
         shareRenderEnsembleList(this.dicParamsClassifier,this.dictDescriptionParamsClassifier, this.name);
     };
@@ -93,7 +93,7 @@
         containerTemp.y = this.offset + (this.children.length - 2) * 25;
         let backgroundTemp = new createjs.Shape();
 
-        var colorTemp = '';
+        let colorTemp = '';
 
         switch (this.typeOfClassifier) {
             case "classifier":
@@ -131,34 +131,26 @@
     };
 
     p.updateDictData = function (idShapeChild, nameClassifierChild, dictParamsClassifier) {
-        console.log(idShapeChild);
-        console.log(this.dicParamsClassifier);
-        console.log(this.dicParamsClassifier[idShapeChild]);
         this.dicParamsClassifier[idShapeChild][nameClassifierChild] = dictParamsClassifier;
     };
 
     p.removeSubShape = function (idShapeChild) {
-        var isFindChild = false;
+        let isFindChild = false;
         let childNumberIndex = 0;
         if (this.children.length <= 4) {
             delete this.dicParamsClassifier[idShapeChild];
             for (let name in this.dicParamsClassifier[Object.keys(this.dicParamsClassifier)[0]]){
-                alert(name);
-                console.log(this.dicParamsClassifier[Object.keys(this.dicParamsClassifier)[0]][name]);
                 window.addShape(name,this.dicParamsClassifier[Object.keys(this.dicParamsClassifier)[0]][name],this.dictDescriptionParamsClassifier[Object.keys(this.dictDescriptionParamsClassifier)[0]][name],this.typeOfClassifier);
             }
             window.removeShape(this.name);
         } else {
             for (let child in this.children) {
-                console.log(this.children[child].name);
-                console.log(idShapeChild);
-                console.log(this.children.length);
-                if (this.children[child].name == idShapeChild) {
+                if (this.children[child].name === idShapeChild) {
                     childNumberIndex = child;
                     delete this.dicParamsClassifier[idShapeChild];
                     isFindChild = true;
                 } else {
-                    if (isFindChild == true) {
+                    if (isFindChild === true) {
                         this.children[child].y -= 25;
                     }
                 }
