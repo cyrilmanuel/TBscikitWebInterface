@@ -28,7 +28,7 @@
 
     // setup the shape
     p.setup = function () {
-        var text = new createjs.Text(this.nameClassifier.replace(/([A-Z])/g, ' $1').trim(), "20px Arial", "#000");
+        var text = new createjs.Text(this.nameClassifier.replace(/([A-Z])/g, ' $1').trim()+"\nID:"+this.name, "20px Arial", "#000");
         text.textAlign = "center";
         text.maxWidth = 100;
         text.lineWidth = 100;
@@ -99,6 +99,11 @@
     p.getDataDict = function () {
         var temp = {};
         temp[this.nameClassifier] = this.dicParamsClassifier;
+        return temp;
+    };
+    p.getDescriptionDict = function () {
+        var temp = {};
+        temp[this.nameClassifier] = this.dictDescriptionParamsClassifier;
         return temp;
     };
 

@@ -95,6 +95,7 @@ class EnsembleList extends React.Component {
         super(props);
         this.IdEnsembleLearning = this.props.IdEnsembleLearning;
         this.dataClassifier = this.props.dataClassifier;
+        this.descriptionClassifier = this.props.descriptionClassifier;
         this.onClick = this.onClick.bind(this);
         this.onDelete = this.onDelete.bind(this);
     }
@@ -108,7 +109,7 @@ class EnsembleList extends React.Component {
 
     onClick(event) {
         shareRenderInitFormulaireShape();
-        shareRenderFormEnsemble(this.dataClassifier[event.target.id][event.target.name], event.target.name, event.target.id, this.IdEnsembleLearning, this.dataClassifier);
+        shareRenderFormEnsemble(this.dataClassifier[event.target.id][event.target.name],this.descriptionClassifier[event.target.id][event.target.name], event.target.name, event.target.id, this.IdEnsembleLearning, this.dataClassifier, this.descriptionClassifier);
     }
 
     render() {
@@ -139,9 +140,9 @@ class EnsembleList extends React.Component {
 }
 ;
 
-window.shareRenderEnsembleList = function (dataClassifier, IdEnsembleLearning) {
+window.shareRenderEnsembleList = function (dataClassifier,descriptionClassifier, IdEnsembleLearning) {
     ReactDOM.render(
-        <EnsembleList dataClassifier={dataClassifier} IdEnsembleLearning={IdEnsembleLearning}/>,
+        <EnsembleList dataClassifier={dataClassifier} IdEnsembleLearning={IdEnsembleLearning} descriptionClassifier={descriptionClassifier}/>,
         document.getElementById('formClassificator')
     );
 };
@@ -163,7 +164,6 @@ class Formul extends React.Component {
     }
 
     handleChange(event) {
-        alert(event.target.value);
         this.setState({[event.target.name]: event.target.value},()=>window.updateShapeParam(this.idShape, this.state));
     }
 
@@ -197,11 +197,14 @@ class Formul extends React.Component {
                            key="download">DL Model</a>
                     </div>
                 </div>
+                <div className="row">
+                    ID of the shape : {this.props.idShape}
+                </div>
                 {Object.keys(this.state).map(name => {
                     return (
                         <div key={'row-' + name} className="row">
                             <div className="col s6">
-                                <label key={'label-' + name} for={name}> {name}</label>
+                                <label key={'label-' + name}> {name}</label>
                             </div>
                             <div className="col s6">
                                 <a className="btn-flat-tiny waves-effect waves-light" name={name}
@@ -235,22 +238,31 @@ window.shareRenderFormShape = function (dictParamsClassifier, dictDescriptionPar
 class FormEnsemble extends React.Component {
     constructor(props) {
         super(props);
+        this.idShape = this.props.idShape;
         this.name = this.props.name;
         this.state = this.props.dict; // trick replace state dict by dict params clasifier
+        this.allClassifier = this.props.dictAllClassifier;
         this.handleDelete = this.handleDelete.bind(this);
         this.handleChange = this.handleChange.bind(this);
         this.handleList = this.handleList.bind(this);
+        this.handleInfo = this.handleInfo.bind(this);
+    }
+
+    handleInfo(event){
+        alert(this.props.dictDescriptionParamsClassifier[event.currentTarget.name]);
     }
 
     handleChange(event) {
-        this.setState({[event.target.name]: event.target.value},()=>window.updateShapeEnsembleParam(this.idShape, this.state, this.props.idShapeParent));
-         }
+        this.setState({[event.target.name]: event.target.value},function(){
+            window.updateShapeEnsembleParam(this.idShape, this.state, this.props.idShapeParent, this.name);
+            this.allClassifier[this.idShape][this.name] = this.state;
+        });
+    }
 
     handleDelete(event) {
         if (confirm('Are you sure you want to remove the shape ' + this.name + '?')) {
             window.removeEnsembleShape(this.props.idShapeParent, this.props.idShape);
             Materialize.toast(this.name + ' removed !', 2000, 'rounded');
-            //shareRenderInitFormulaireShape();
         }
 
         event.preventDefault();
@@ -258,7 +270,7 @@ class FormEnsemble extends React.Component {
 
     handleList(event) {
         shareRenderInitFormulaireShape();
-        shareRenderEnsembleList(this.props.dictAllClassifier, this.props.idShapeParent);
+        shareRenderEnsembleList(this.props.dictAllClassifier, this.props.dictAllDescription, this.props.idShapeParent);
     }
 
     render() {
@@ -274,12 +286,25 @@ class FormEnsemble extends React.Component {
                            key="Delete">Delete Shape</a>
                     </div>
                 </div>
+                <div className="row">
+                    ID of the shape : {this.props.idShape}
+                </div>
                 {Object.keys(this.state).map(name => {
-                    return (
-                        <label key={'label' + name}> {name}
-                            <input type="text" name={name} value={this.state[name]} onChange={this.handleChange}
-                                   placeholder={this.state[name]} key={name}/>
-                        </label>
+                   return (
+                        <div key={'row-' + name} className="row">
+                            <div className="col s6">
+                                <label key={'label-' + name}> {name}</label>
+                            </div>
+                            <div className="col s6">
+                                <a className="btn-flat-tiny waves-effect waves-light" name={name}
+                                   onClick={this.handleInfo} key={'btn-' + name}><i className="material-icons">info_outline</i></a>
+                            </div>
+                            <div className="col s12">
+                                <input type="text" name={name} value={this.state[name]} id={name}
+                                       onChange={this.handleChange}
+                                       placeholder={this.state[name]} key={name}/>
+                            </div>
+                        </div>
                     );
                 })}
             </form>
@@ -288,10 +313,11 @@ class FormEnsemble extends React.Component {
 }
 ;
 
-window.shareRenderFormEnsemble = function (dictParamsClassifier, nameClassifier, idShape, idShapeParent, dictAllClassifier) {
+window.shareRenderFormEnsemble = function (dictParamsClassifier,dictDescriptionParamsClassifier, nameClassifier, idShape, idShapeParent, dictAllClassifier,dictAllDescription) {
     ReactDOM.render(
         <FormEnsemble dict={dictParamsClassifier} name={nameClassifier} idShape={idShape}
-                      idShapeParent={idShapeParent} dictAllClassifier={dictAllClassifier}/>,
+                      idShapeParent={idShapeParent} dictAllClassifier={dictAllClassifier}
+                       dictDescriptionParamsClassifier={dictDescriptionParamsClassifier} dictAllDescription={dictAllDescription} />,
         document.getElementById('formClassificator')
     );
 };
@@ -316,8 +342,8 @@ class ResultDiv extends React.Component {
 
     handleShowMatrix(event) {
 
-        let data = {}
-        data[event.target.name] = this.responseDict[event.target.name];
+        let data = {};
+        data[Object.keys(this.responseDict[event.target.name])[0]] = this.responseDict[Object.keys(this.responseDict[event.target.name])[0]];
         axios.post('/index/matrix', {
             params: data,
         })
@@ -333,12 +359,12 @@ class ResultDiv extends React.Component {
     render() {
         let result = Object.keys(this.responseDict).map(name => {
                 return (
-                    <div className="row">
-                        <div className="col s10">
-                            <div key={name}>Result for {name} {this.responseDict[name]['resultat']}
+                    <div className="row" key={"row-"+name}>
+                        <div className="col s10" key={"cols10-"+name}>
+                            <div key={name}>Result for {Object.keys(this.responseDict[name])[0]} {this.responseDict[name][Object.keys(this.responseDict[name])[0]]['resultat']}
                             </div>
                         </div>
-                        <div className="col s2">
+                        <div className="col s2" key={"cols2-"+name}>
                             <a className="waves-effect waves-light btn-small" name={name} onClick={this.handleShowMatrix}
                                key={"btnMatrix" + name}>Show Matrix</a>
                         </div>
@@ -348,18 +374,18 @@ class ResultDiv extends React.Component {
         );
         let listItems = Object.keys(this.tabResponseEmpty).map(index => {
                 return (
-                    <div className="row">
+                    <div className="row" key={"rowr-"+index}>
                         <div className="col s12" key={index}>
-                            <div className="preloader-wrapper active">
-                                <div className="spinner-layer spinner-green-only">
-                                    <div className="circle-clipper left">
-                                        <div className="circle"></div>
+                            <div className="preloader-wrapper active"  key={"preload-"+index}>
+                                <div className="spinner-layer spinner-green-only"  key={"spinner-"+index}>
+                                    <div className="circle-clipper left"  key={"circle-"+index}>
+                                        <div className="circle"  key={"cir-"+index}></div>
                                     </div>
-                                    <div className="gap-patch">
-                                        <div className="circle"></div>
+                                    <div className="gap-patch"  key={"gap-"+index}>
+                                        <div className="circle"  key={"circl-"+index}></div>
                                     </div>
-                                    <div className="circle-clipper right">
-                                        <div className="circle"></div>
+                                    <div className="circle-clipper right" key={"clipper-"+index}>
+                                        <div className="circle"  key={"lastcircle-"+index}></div>
                                     </div>
                                 </div>
                             </div>
@@ -369,7 +395,7 @@ class ResultDiv extends React.Component {
             }
         );
         return (
-            <div>{result}{listItems}</div>
+            <div  key="Result">{result}{listItems}</div>
         );
     }
 }

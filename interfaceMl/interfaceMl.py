@@ -1,25 +1,23 @@
 # -*- coding: utf-8 -*-
 # all the imports
-import base64
 import os
 import pickle
 import re
 import traceback
-import matplotlib.pyplot as plt
-from io import BytesIO
 from ast import literal_eval
 from importlib import import_module
+import matplotlib.pyplot as plt
 from scikitplot import plotters as skplt
-from flask import Flask, request, redirect, url_for, \
-    render_template, flash, jsonify, send_file, make_response
-from flask_restful import Resource, Api
 from numpydoc.docscrape import NumpyDocString
+from flask import Flask, request, redirect, url_for, \
+    render_template, flash, jsonify, send_file
+from flask_restful import Resource, Api
 from sklearn.ensemble import VotingClassifier
 from sklearn.externals import joblib
 from sklearn.model_selection import cross_val_score
-from sklearn.naive_bayes import GaussianNB
 from sklearn.utils.testing import all_estimators
 
+# import others files in application.
 import interfaceMl.extractSqlToPickle
 
 with open('interfaceMl/DataSet/x_data_filtered.pickle', 'rb') as f:
@@ -28,9 +26,8 @@ with open('interfaceMl/DataSet/x_data_filtered.pickle', 'rb') as f:
 with open('interfaceMl/DataSet/y_data_filtered.pickle', 'rb') as f:
     y_data_filtered = pickle.load(f)
 
-# iris = datasets.load_iris()
-# x_data_filtered, y_data_filtered = iris.data, iris.target
-# dictEstimator is to stock object class and name objet
+dictDataToSendEstimator = {}
+# dictEstimator for stocking object class and name objet
 dictTypeEstimator = {}
 dictEstimator = {}
 
@@ -48,7 +45,6 @@ dictDescriptionParamRegr = {}
 listProcess = [
 ]
 
-
 def getDicoParams(instanceClassifier):
     dico = {}
     types_re = re.compile(r"(?P<type>(float|int(eger)?|str(ing)?|bool(ean)?))")
@@ -61,49 +57,68 @@ def getDicoParams(instanceClassifier):
         'integer': int,
         'float': float,
     }
-    temp = instanceClassifier().get_params()
-    doc = NumpyDocString("    " + instanceClassifier.__doc__)  # hack
+    classifierTemp = instanceClassifier().get_params()
+    doc = NumpyDocString("    " + instanceClassifier.__doc__)  # hack, get the doc for the classifier
+
+    # For each params in get_params, take the name, first row contain type and the description
     for name, type_, descriptions in doc['Parameters']:
+
+        # Find types in this row
         types = types_re.match(type_)
-        if types != None and temp[name]!="Infinity":
+
+        # Check if the type was finded and if is not equal to "Infinity"
+        if types != None and classifierTemp[name] != "Infinity":
+
+            # Creates a complete description for this params
             completeDescription = str(type_) + "\n \n" + " ".join(str(e) for e in descriptions)
-            dico[name] = (type_map.get(types.group()), temp[name], completeDescription)
+
+            # add into the dict at the key (name of the params)
+            # a tuple (instance of type, default value of params, description)
+            dico[name] = (type_map.get(types.group()), classifierTemp[name], completeDescription)
+
     return dico
 
 
 for name, class_ in all_estimators():
+    # Retrieves the type of the current estimator
     typeclass = str(getattr(class_, "_estimator_type", None))
 
+    # Delete the wrong estimator and check if it is a classifier
     if "_" not in name and typeclass == "classifier":
 
-        # recup the module name and path of scikit
+        # Retrieves the name and path of the module, from scikit for the current estimator
         modulePath = str(class_).split("'")[1]
 
-        # check if the name of the classifier is on the pass
-        # if it is, change the module path to delete the name and the dot
+        # Check if the classifier's name is in the path
+        # If this is in, it is removed from the module path
         if name in modulePath:
-            # remove name on module import
+            # Remove the name on the module path and stock an just-in-time import for the key (name of classifier)
             dictEstimator[name] = getattr(import_module(modulePath.replace("." + name, '')), name)
         else:
-            # great, let's push them
+            # He not contain the name in the path, juste stock an just-in-time import for the key (name of classifier)
             dictEstimator[name] = getattr(import_module(modulePath), name)
 
+        # Stock the dictionary that analyzes the doc.
+        # It makes it possible to obtain the possible type of value of the classifier for each of these parameters
         dictTypeEstimator[name] = getDicoParams(dictEstimator[name])
+
         # stock the param of the classifier
         dictParamEstimator[name] = {key: v[1] for key, v in dictTypeEstimator[name].items()}
         dictDescriptionParam[name] = {key: v[2] for key, v in dictTypeEstimator[name].items()}
-    elif "_" not in name and typeclass == "regressor" and name != "LassoLarsIC" and name!="RANSACRegressor":
 
-        # recup the module name and path of scikit
+        # Delete the wrong estimator and check if it is a regressor
+    elif "_" not in name and typeclass == "regressor" and name != "LassoLarsIC" and name != "RANSACRegressor":
+
+        # Retrieves the name and path of the module, from scikit for the current estimator
         modulePath = str(class_).split("'")[1]
 
-        # check if the name of the classifier is on the pass
-        # if it is, change the module path to delete the name and the dot
-        if name in modulePath :
-            # remove name on module import
+        # Check if the classifier's name is in the path
+        # If this is in, it is removed from the module path
+        if name in modulePath:
+            # Remove the name on the module path and stock an just-in-time import for the key (name of classifier)
             dictEstimatorRegr[name] = getattr(import_module(modulePath.replace("." + name, '')), name)
         else:
-            # great, let's push them
+            # He not contain the name in the path, juste stock an just-in-time import for the key (name of classifier)
             dictEstimatorRegr[name] = getattr(import_module(modulePath), name)
 
         dictTypeEstimatorRegr[name] = getDicoParams(dictEstimatorRegr[name])
@@ -115,9 +130,9 @@ for name, class_ in all_estimators():
 class MatrixImage(Resource):
     def get(self):
         return send_file('DataSet/matrix.png',
-                     mimetype='image/png',
-                     attachment_filename='matrix.png',
-                     as_attachment=True)
+                         mimetype='image/png',
+                         attachment_filename='matrix.png',
+                         as_attachment=True)
 
     def post(self):
         receive_json = request.get_json()
@@ -133,12 +148,14 @@ class MatrixImage(Resource):
                 plt.savefig('interfaceMl/DataSet/matrix.png')
                 return "OK"
 
+
 class PickleFile(Resource):
     def get(self):
         return send_file('DataSet/newModel.pkl',
                          mimetype='application/python-pickle',
                          attachment_filename='newModel.pkl',
                          as_attachment=True)
+
     def post(self):
         receive_json = request.get_json()
         resultatf = {}
@@ -182,8 +199,8 @@ class PickleFile(Resource):
 class UseScikit(Resource):
     def get(self):
         # return dictionnary {nameClassifier : {Params1:value1, Params2:value2}}
-        #tab = [dictParamEstimator, dictDescriptionParam]
-        data = {"regressor":[dictParamEstimatorRegr, dictDescriptionParamRegr],
+        # tab = [dictParamEstimator, dictDescriptionParam]
+        data = {"regressor": [dictParamEstimatorRegr, dictDescriptionParamRegr],
                 "classifier": [dictParamEstimator, dictDescriptionParam]}
         return jsonify(data)
 

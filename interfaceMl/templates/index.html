@@ -108,7 +108,6 @@
             url: 'backend',
             contentType: 'application/json',
             success: function (data) {
-                console.log(data);
                 shareRenderTypeOfButtonList(data);
             },
             error: function (jqXhr, textStatus, errorThrown) {
@@ -131,11 +130,11 @@
                         let pt = stage.getChildByName(nameShape).localToLocal(0, 0, stage.children[indexShape]);
                         if (stage.children[indexShape].hitTest(pt.x, pt.y)) {
                             if (stage.children[indexShape].nameClassifier != "ensemble Learning") {
-                                if(stage.children[indexShape].typeOfClassifier == stage.getChildByName(nameShape).typeOfClassifier) {
+                                if (stage.children[indexShape].typeOfClassifier == stage.getChildByName(nameShape).typeOfClassifier) {
                                     // 2 shape yello
                                     if (confirm('ensemble learning ?')) {
                                         const sizeCanvas = {"width": stage.canvas.width, "height": stage.canvas.height};
-                                        let ensembleShapeTemp = new EnsembleShapeGenerator(idShape.toString(), sizeCanvas, stage.getChildByName(nameShape).getDataDict(), stage.children[indexShape].getDataDict(), stage.getChildByName(nameShape).typeOfClassifier);
+                                        let ensembleShapeTemp = new EnsembleShapeGenerator(idShape.toString(), sizeCanvas, stage.getChildByName(nameShape).getDataDict(), stage.children[indexShape].getDataDict(),stage.getChildByName(nameShape).getDescriptionDict(),stage.children[indexShape].getDescriptionDict(), stage.getChildByName(nameShape).typeOfClassifier);
                                         stage.addChild(ensembleShapeTemp);
                                         removeShape(stage.children[indexShape].name);
                                         removeShape(nameShape);
@@ -147,7 +146,7 @@
                                 }
                             } else {
                                 // shape moved is yellow and shape under is ensemble
-                                if(stage.children[indexShape].typeOfClassifier == stage.getChildByName(nameShape).typeOfClassifier) {
+                                if (stage.children[indexShape].typeOfClassifier == stage.getChildByName(nameShape).typeOfClassifier) {
                                     //same type classifier
                                     if (confirm('add shape to ensemble ?')) {
                                         stage.children[indexShape].addClassifier(stage.getChildByName(nameShape).getDataDict());
@@ -175,7 +174,6 @@
         };
 
         window.removeShape = function (idShape) {
-            console.log(stage.children);
             stage.removeChild(stage.getChildByName(idShape));
             shareRenderInitFormulaireShape();
         };
@@ -186,8 +184,9 @@
         window.updateShapeParam = function (idShape, dictParams) {
             stage.getChildByName(idShape).updateDictData(dictParams);
         };
-        window.updateShapeEnsembleParam = function (idShapeChild, dictParamsChild, idShapeParent) {
-            stage.getChildByName(idShapeParent).updateDictData(idShapeChild, dictParamsChild);
+        window.updateShapeEnsembleParam = function (idShapeChild, dictParamsChild, idShapeParent, nameClassifierChild) {
+            stage.getChildByName(idShapeParent).updateDictData(idShapeChild, nameClassifierChild, dictParamsChild);
+
         };
 
         window.removeAllChildren = function () {
@@ -229,13 +228,12 @@
         }
     }
 
-
     // -------------------------------- send data to backend in ajax -------------------------
     $('#my-form').submit(function (e) {
         e.preventDefault();
         let arr = [];
         let tabtest = [];
-        let tabResult = {};
+        let tabResult = [];
         let dataToSend = getDFS();
         for (let name in dataToSend) {
             tabtest.push(dataToSend[name]);
@@ -249,14 +247,10 @@
                     type: 'post',
                     contentType: 'application/json',
                     data: JSON.stringify(elementInTab),
-                    //data: JSON.stringify({"SVC": {"C": 1.0, "kernel": "rbf", "cache_size": 200, "tol": 0.001, "max_iter": -1, "class_weight": null, "shrinking": true, "degree": 3, "random_state": null, "coef0": 0.0, "decision_function_shape": null, "gamma": "auto", "probability": false, "verbose": false}}),
                     success: function (dataReceive, textStatus, jQxhr) {
                         window.shareRenderResetResult();
                         let temp = JSON.parse(dataReceive);
-                        console.log(temp);
-                        for (let i in temp) {
-                            tabResult[i] = temp[i];
-                        }
+                        tabResult.push(temp);
                         window.shareRenderResult(tabResult, tabtest.length);
                     },
                     error: function (jqXhr, textStatus, errorThrown) {
@@ -266,8 +260,14 @@
             )
         });
         $.when.apply(undefined, arr).then(function () {
-            Materialize.toast('all cross-validation done !', 3000, 'rounded');
+            if (tabtest.length == 0) {
+                shareRenderResetResult();
+                Materialize.toast('Nothing to process !', 3000, 'rounded');
+            } else {
+                Materialize.toast('all cross-validation done !', 3000, 'rounded');
+            }
         });
+
     });
 
     window.renderMatrix = function (response) {
