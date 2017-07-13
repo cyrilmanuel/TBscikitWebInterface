@@ -98,6 +98,11 @@ class EnsembleList extends React.Component {
         this.descriptionClassifier = this.props.descriptionClassifier;
         this.onClick = this.onClick.bind(this);
         this.onDelete = this.onDelete.bind(this);
+        this.handleDownload = this.handleDownload.bind(this);
+    }
+
+     handleDownload(event){
+        window.startDownload(this.IdEnsembleLearning);
     }
 
     onDelete(event) {
@@ -116,10 +121,14 @@ class EnsembleList extends React.Component {
         let allrow = "";
         let final = [];
         let rows = [];
-        let buttonDelete = <div className="row">
-            <div className="col s12">
+        let buttonDelete = <div className="row" key="rowBtn">
+            <div className="col s6" key="colDelete">
                 <a className="waves-effect waves-light btn" name="Delete" onClick={this.onDelete}
                    key="Delete">Delete Ensemble</a>
+            </div>
+            <div className="col s6" key="coldl">
+                <a className="waves-effect waves-light btn" name="DL" onClick={this.handleDownload}
+                   key="Download">Download</a>
             </div>
         </div>;
         for (let idshape in this.dataClassifier) {
@@ -130,11 +139,11 @@ class EnsembleList extends React.Component {
             }
         }
         ;
-        allrow = <div className="collection">{rows}</div>
+        allrow = <div className="collection" key="collectionEnsemble">{rows}</div>
         final.push(buttonDelete);
         final.push(allrow);
         return (
-            <div>{final}</div>
+            <div key="finalDiv">{final}</div>
         );
     }
 }
@@ -363,7 +372,7 @@ class ResultDiv extends React.Component {
                 return (
                     <div className="row" key={"row-"+name}>
                         <div className="col s10" key={"cols10-"+name}>
-                            <div key={name}>Result for {Object.keys(this.responseDict[name])[0]} {this.responseDict[name][Object.keys(this.responseDict[name])[0]]['resultat']}
+                            <div key={name}>Result for {Object.keys(this.responseDict[name])[0]} ID:{name} {this.responseDict[name][Object.keys(this.responseDict[name])[0]]['resultat']}
                             </div>
                         </div>
                         <div className="col s2" key={"cols2-"+name}>
@@ -405,7 +414,7 @@ class ResultDiv extends React.Component {
 
 window.shareRenderResult = function (DictResultPost, nbResult) {
     ReactDOM.render(
-        <ResultDiv dict={DictResultPost} nb={nbResult}/>,
+        <ResultDiv dict={DictResultPost} nb={nbResult} />,
         document.getElementById('response')
     );
 };

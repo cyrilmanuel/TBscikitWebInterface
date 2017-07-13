@@ -247,8 +247,6 @@ class UseScikit(Resource):
 
         for nameClassifier, dictParams in receive_json.items():
             if (nameClassifier == 'ensemble Learning'):
-                print("ENSEMBLE LEARNING")
-                print(dictParams)
                 estimators = []
                 typeOfClassifier = ""
                 for index, classifier, in dictParams.items():

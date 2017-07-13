@@ -122,7 +122,7 @@
                                 if (stage.children[indexShape].typeOfClassifier === stage.getChildByName(nameShape).typeOfClassifier) {
                                     //same type classifier
                                     if (confirm('add shape to ensemble ?')) {
-                                        stage.children[indexShape].addClassifier(stage.getChildByName(nameShape).getDataDict());
+                                        stage.children[indexShape].addClassifier(stage.getChildByName(nameShape).getDataDict(),stage.getChildByName(nameShape).getDescriptionDict());
                                         removeShape(stage.getChildByName(nameShape).name);
                                     } else {
                                         stage.getChildByName(nameShape).resetPositionShape();
@@ -201,13 +201,9 @@
     $('#my-form').submit(function (e) {
         e.preventDefault();
         let arr = [];
-        let tabtest = [];
-        let tabResult = [];
+        let DictResult = {};
         let dataToSend = getDFS();
         for (let name in dataToSend) {
-            tabtest.push(dataToSend[name]);
-        }
-        tabtest.forEach(function (elementInTab) {
             arr.push(
                 $.ajax({
                     async: true,
@@ -215,21 +211,21 @@
                     dataType: 'text',
                     type: 'post',
                     contentType: 'application/json',
-                    data: JSON.stringify(elementInTab),
+                    data: JSON.stringify(dataToSend[name]),
                     success: function (dataReceive, textStatus, jQxhr) {
                         window.shareRenderResetResult();
                         let temp = JSON.parse(dataReceive);
-                        tabResult.push(temp);
-                        window.shareRenderResult(tabResult, tabtest.length);
+                        DictResult[name]=temp;
+                        window.shareRenderResult(DictResult, Object.keys(dataToSend).length);
                     },
                     error: function (jqXhr, textStatus, errorThrown) {
                         console.log(errorThrown);
                     }
                 })
             )
-        });
+        };
         $.when.apply(undefined, arr).then(function () {
-            if (tabtest.length === 0) {
+            if (arr.length === 0) {
                 shareRenderResetResult();
                 Materialize.toast('Nothing to process !', 3000, 'rounded');
             } else {

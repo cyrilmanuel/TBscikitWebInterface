@@ -120,7 +120,6 @@
         this.addChild(containerTemp);
         this.idSubShapeGenerator++;
         this.getChildByName("background").graphics.clear().beginFill(this.color).drawRoundRect(0, 0, 150, ((this.children.length) * 24), 15);
-        shareRenderInitFormulaireShape();
     };
     // return dict containe name of classifier and dict with params of classifier
     // like this {name : {Params1:value1, Params2:value2}}
