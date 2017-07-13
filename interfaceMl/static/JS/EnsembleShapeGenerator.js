@@ -145,7 +145,7 @@
             for (let name in this.dicParamsClassifier[Object.keys(this.dicParamsClassifier)[0]]){
                 alert(name);
                 console.log(this.dicParamsClassifier[Object.keys(this.dicParamsClassifier)[0]][name]);
-                window.addShape(name,)
+                window.addShape(name,this.dicParamsClassifier[Object.keys(this.dicParamsClassifier)[0]][name],this.dictDescriptionParamsClassifier[Object.keys(this.dictDescriptionParamsClassifier)[0]][name],this.typeOfClassifier);
             }
             window.removeShape(this.name);
         } else {
