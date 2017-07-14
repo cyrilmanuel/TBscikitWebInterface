@@ -139,7 +139,6 @@ def validationClassifier(dictParams, nameClassifier, typeOf):
     tabDict = []
     newValue = {}
     errorReturn = "\n"
-    print(dictParams)
     if (typeOf == "classifier"):
         tabDict.append(dictParamEstimator)
         tabDict.append(dictTypeEstimator)
@@ -157,7 +156,6 @@ def validationClassifier(dictParams, nameClassifier, typeOf):
             if tabDict[1][nameClassifier][nameparams][0] == bool:
                 try:
                     valueConverted = literal_eval(valueParams.title())
-                    print(valueConverted)
                     newValue[nameparams] = tabDict[1][nameClassifier][nameparams][0](valueConverted)
                 except Exception:
                     errorReturn += "Wrong parameter for {0} \n".format(nameparams)
@@ -175,6 +173,7 @@ def validationClassifier(dictParams, nameClassifier, typeOf):
                     newValue[nameparams] = tabDict[1][nameClassifier][nameparams][0](valueConverted)
                 except Exception:
                     errorReturn += "Wrong parameter for {0} \n".format(nameparams)
+    print('Erreur retourner : {0}'.format(errorReturn))
     return (newValue, errorReturn)
 
 
@@ -209,8 +208,7 @@ class PickleFile(Resource):
 
     def post(self):
         receive_json = request.get_json()
-        resultatf = ""
-        print('-------------------- ---------------- ---------------------')
+
         print(receive_json)
         for nameClassifier, dictParams in receive_json.items():
             typeOfClassifier = dictParams.pop('typeOf', None)
@@ -258,38 +256,41 @@ class UseScikit(Resource):
         for nameClassifier, dictParams in receive_json.items():
             if nameClassifier == 'ensemble Learning':
                 estimators = []
-                typeOfClassifier = ""
                 for index, classifier, in dictParams.items():
                     for nameSubClass, dicoValueParams, in classifier.items():
                         typeOfClassifier = dicoValueParams.pop('typeOf', None)
-                        resultValidation = validationClassifier(dicoValueParams, nameClassifier, typeOfClassifier)
+                        resultValidation = validationClassifier(dicoValueParams, nameSubClass, typeOfClassifier)
                         newValue = resultValidation[0]
-                        resultatFinal = resultValidation[1]
-                        if type(resultatFinal) == str and not (resultatFinal and resultatFinal.strip()):
+
+
+                        if type(resultValidation[1]) == str and not (resultValidation[1] and resultValidation[1].strip()):
                             clfChild = dictEstimator[nameSubClass]()
                             # send params issue by the request
                             clfChild.set_params(**newValue)
 
                             estimators.append((nameSubClass, clfChild))
-                try:
-                    clfEnsemble = VotingClassifier(estimators)
+                        else:
+                            resultatFinal += "{0} in {1}.\n".format(resultValidation[1], nameSubClass)
+                if type(resultatFinal) == str and not (resultatFinal and resultatFinal.strip()):
+                    try:
+                        clfEnsemble = VotingClassifier(estimators)
 
-                    # évaluate the scoring
-                    scores = cross_val_score(clfEnsemble, x_data_filtered, y_data_filtered, cv=3)
+                        # évaluate the scoring
+                        scores = cross_val_score(clfEnsemble, x_data_filtered, y_data_filtered, cv=3)
 
-                    if typeOfClassifier == "classifier":
+                        if typeOfClassifier == "classifier":
 
-                        # Stock the result into variable resultat
-                        resultatFinal = ("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
+                            # Stock the result into variable resultat
+                            resultatFinal = ("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
 
-                    elif typeOfClassifier == "regressor":
+                        elif typeOfClassifier == "regressor":
 
-                        # Stock the result into variable resultat
-                        resultatFinal = ("Accuracy: %0.2f" % (scores.mean()))
+                            # Stock the result into variable resultat
+                            resultatFinal = ("Accuracy: %0.2f" % (scores.mean()))
 
-                except Exception:
-                    resultatFinal += traceback.format_exc()
-                    # return all result processed
+                    except Exception:
+                        resultatFinal += traceback.format_exc()
+                        # return all result processed
 
             else:
                 typeOfClassifier = dictParams.pop('typeOf', None)
