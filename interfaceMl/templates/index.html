@@ -238,9 +238,8 @@
     });
 
     window.renderMatrix = function (response) {
-       window.open('index/matrix', 'Download');
-
-        let isOK = JSON.Parse(response);
+        console.log(response);
+        isOK = true;
         if (isOK){
              window.open('index/matrix', 'Download');
         }else {

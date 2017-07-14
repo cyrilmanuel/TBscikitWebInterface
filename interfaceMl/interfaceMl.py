@@ -8,7 +8,6 @@ from ast import literal_eval
 from importlib import import_module
 import matplotlib.pyplot as plt
 from scikitplot import plotters as skplt
-from scikitplot import classifier_factory
 from numpydoc.docscrape import NumpyDocString
 from flask import Flask, request, redirect, url_for, \
     render_template, flash, jsonify, send_file
@@ -18,7 +17,8 @@ from sklearn.externals import joblib
 from sklearn.model_selection import cross_val_score
 from sklearn.utils.testing import all_estimators
 from sklearn.datasets import load_iris
-
+from mlxtend.regressor import StackingRegressor
+from sklearn.svm import SVR
 
 # import others files in application.
 import interfaceMl.extractSqlToPickle
@@ -32,7 +32,6 @@ with open('interfaceMl/DataSet/y_data_filtered.pickle', 'rb') as f:
 iris = load_iris()
 x_data_filtered = iris.data
 y_data_filtered = iris.target
-
 
 dictDataToSendEstimator = {}
 # dictEstimator for stocking object class and name objet
@@ -245,6 +244,7 @@ class PickleFile(Resource):
         for nameClassifier, dictParams in receive_json.items():
             if nameClassifier == 'ensemble Learning':
                 estimators = []
+                typeOfClassifier =""
                 resultatFinal = ""
                 for index, classifier, in dictParams.items():
                     for nameSubClass, dicoValueParams, in classifier.items():
@@ -252,7 +252,7 @@ class PickleFile(Resource):
                         resultValidation = validationClassifier(dicoValueParams, nameSubClass, typeOfClassifier)
                         newValue = resultValidation[0]
                         if type(resultValidation[1]) == str and not (
-                            resultValidation[1] and resultValidation[1].strip()):
+                                    resultValidation[1] and resultValidation[1].strip()):
                             if typeOfClassifier == "classifier":
                                 clfChild = dictEstimator[nameSubClass]()
                             elif typeOfClassifier == "regressor":
@@ -265,8 +265,17 @@ class PickleFile(Resource):
                             resultatFinal += "{0} in {1}.\n".format(resultValidation[1], nameSubClass)
                 if type(resultatFinal) == str and not (resultatFinal and resultatFinal.strip()):
                     try:
-                        clfEnsemble = VotingClassifier(estimators)
-                        clfEnsemble.fit(x_data_filtered, y_data_filtered)
+                        #TODO SAME LIKE CROSS VALIDATION, TEST FOR BOTH TYPE REGRESSION
+                       if(typeOfClassifier=="classifier"):
+                            clfEnsemble = VotingClassifier(estimators)
+                            clfEnsemble.fit(x_data_filtered, y_data_filtered)
+                       elif(typeOfClassifier=="regressor"):
+
+                           est = [b for a, b in estimators]
+                           svr_rbf = SVR(kernel='rbf')
+                           clfEnsemble = StackingRegressor(regressors=est,
+                                                           meta_regressor=svr_rbf)
+                        # évaluate the scoring
                         joblib.dump(clfEnsemble, 'interfaceMl/DataSet/newModel.pkl')
 
                     except Exception:
@@ -329,7 +338,7 @@ class UseScikit(Resource):
                         newValue = resultValidation[0]
 
                         if type(resultValidation[1]) == str and not (
-                            resultValidation[1] and resultValidation[1].strip()):
+                                    resultValidation[1] and resultValidation[1].strip()):
                             if typeOfClassifier == "classifier":
                                 clfChild = dictEstimator[nameSubClass]()
                             elif typeOfClassifier == "regressor":
@@ -342,18 +351,25 @@ class UseScikit(Resource):
                             resultatFinal += "{0} in {1}.\n".format(resultValidation[1], nameSubClass)
                 if type(resultatFinal) == str and not (resultatFinal and resultatFinal.strip()):
                     try:
-                        clfEnsemble = VotingClassifier(estimators)
 
                         if typeOfClassifier == "classifier":
 
+                            clfEnsemble = VotingClassifier(estimators)
                             # Stock the result into variable resultat
                             # évaluate the scoring
                             scores = cross_val_score(clfEnsemble, x_data_filtered, y_data_filtered, cv=3)
                             resultatFinal = ("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
 
                         elif typeOfClassifier == "regressor":
+
+                            est = [b for a,b in estimators]
+                            print(est)
+                            svr_rbf = SVR(kernel='rbf')
+                            clfEnsemble = StackingRegressor(regressors=est,
+                                                            meta_regressor=svr_rbf)
                             # évaluate the scoring
-                            scores = cross_val_score(clfEnsemble, x_data_filtered, y_data_filtered, cv=3, scoring='neg_mean_squared_error')
+                            scores = cross_val_score(clfEnsemble, x_data_filtered, y_data_filtered, cv=3,
+                                                     scoring='neg_mean_squared_error')
                             # Stock the result into variable resultat
                             resultatFinal = ("negatif mean squared error: %0.2f" % (scores.mean()))
 
