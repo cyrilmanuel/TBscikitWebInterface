@@ -8,6 +8,7 @@ from ast import literal_eval
 from importlib import import_module
 import matplotlib.pyplot as plt
 from scikitplot import plotters as skplt
+from scikitplot import classifier_factory
 from numpydoc.docscrape import NumpyDocString
 from flask import Flask, request, redirect, url_for, \
     render_template, flash, jsonify, send_file
@@ -186,17 +187,40 @@ class MatrixImage(Resource):
 
     def post(self):
         receive_json = request.get_json()
-        for kdata, data in receive_json.items():
-            for k, v in data.items():
+
+        # TODO DIFF BETWEEN CLASSIFIER AND REGRESSOR
+        print(receive_json)
+        for k, v in receive_json['params'].items():
+            if (k != "ensemble Learning"):
                 v.pop('resultat', None)
-                rf = dictEstimator[k]()
+                try:
+                    rf = dictEstimator[k]()
+                except:
+                    rf = dictEstimatorRegr[k]()
                 rf.set_params(**v)
                 rf.fit(x_data_filtered, y_data_filtered)
-                preds = rf.predict(x_data_filtered)
-                skplt.plot_confusion_matrix(y_true=y_data_filtered, y_pred=preds)
-                plt.title("Confusion Matrix for {0}".format(k))
+                skplt.plot_learning_curve(rf, x_data_filtered, y_data_filtered)
+                plt.title("Learning curve for {0}".format(k))
                 plt.savefig('interfaceMl/DataSet/matrix.png')
                 return "OK"
+            else:
+                estimators = []
+                v.pop('resultat', None)
+                for i, j in v.items():
+                    for e, fn in j.items():
+                        try:
+                            clfChild = dictEstimator[e]()
+                        except:
+                            clfChild = dictEstimatorRegr[e]()
+                        # send params issue by the request
+                        clfChild.set_params(**fn)
+                        estimators.append((e, clfChild))
+                        rf = VotingClassifier(estimators)
+                        rf.fit(x_data_filtered, y_data_filtered)
+                        skplt.plot_learning_curve(rf, x_data_filtered, y_data_filtered)
+                        plt.title("Learning curve for {0}".format(k))
+                        plt.savefig('interfaceMl/DataSet/matrix.png')
+                        return "OK"
 
 
 class PickleFile(Resource):
@@ -218,8 +242,12 @@ class PickleFile(Resource):
                         typeOfClassifier = dicoValueParams.pop('typeOf', None)
                         resultValidation = validationClassifier(dicoValueParams, nameSubClass, typeOfClassifier)
                         newValue = resultValidation[0]
-                        if type(resultValidation[1]) == str and not (resultValidation[1] and resultValidation[1].strip()):
-                            clfChild = dictEstimator[nameSubClass]()
+                        if type(resultValidation[1]) == str and not (
+                            resultValidation[1] and resultValidation[1].strip()):
+                            if typeOfClassifier == "classifier":
+                                clfChild = dictEstimator[nameSubClass]()
+                            elif typeOfClassifier == "regressor":
+                                clfChild = dictEstimatorRegr[nameSubClass]()
                             # send params issue by the request
                             clfChild.set_params(**newValue)
 
@@ -291,9 +319,12 @@ class UseScikit(Resource):
                         resultValidation = validationClassifier(dicoValueParams, nameSubClass, typeOfClassifier)
                         newValue = resultValidation[0]
 
-
-                        if type(resultValidation[1]) == str and not (resultValidation[1] and resultValidation[1].strip()):
-                            clfChild = dictEstimator[nameSubClass]()
+                        if type(resultValidation[1]) == str and not (
+                            resultValidation[1] and resultValidation[1].strip()):
+                            if typeOfClassifier == "classifier":
+                                clfChild = dictEstimator[nameSubClass]()
+                            elif typeOfClassifier == "regressor":
+                                clfChild = dictEstimatorRegr[nameSubClass]()
                             # send params issue by the request
                             clfChild.set_params(**newValue)
 

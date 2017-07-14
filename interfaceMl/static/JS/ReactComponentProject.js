@@ -352,11 +352,8 @@ class ResultDiv extends React.Component {
     }
 
     handleShowMatrix(event) {
-
-        let data = {};
-        data[Object.keys(this.responseDict[event.target.name])[0]] = this.responseDict[Object.keys(this.responseDict[event.target.name])[0]];
         axios.post('/index/matrix', {
-            params: data,
+            params:  this.responseDict[event.target.name],
         })
             .then(function (response) {
                 window.renderMatrix(response);
