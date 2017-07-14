@@ -228,17 +228,25 @@
         $.when.apply(undefined, arr).then(function () {
             if (arr.length === 0) {
                 shareRenderResetResult();
-                Materialize.toast('Nothing to process !', 3000, 'rounded');
+                Materialize.toast('Nothing to process !', 2000, 'rounded');
             } else {
-                Materialize.toast('all cross-validation done !', 3000, 'rounded');
+                Materialize.toast('all cross-validation done !', 2000, 'rounded');
                 shareRenderInitFormulaireShape();
             }
         });
 
     });
 
-    window.renderMatrix = function () {
-        window.open('index/matrix', 'Download');
+    window.renderMatrix = function (response) {
+       window.open('index/matrix', 'Download');
+
+        let isOK = JSON.Parse(response);
+        if (isOK){
+             window.open('index/matrix', 'Download');
+        }else {
+            Materialize.toast('Error in création of the PNG', 2000, 'rounded');
+        }
+
     }
 </script>
 </body>

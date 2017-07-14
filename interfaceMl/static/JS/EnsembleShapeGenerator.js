@@ -140,6 +140,7 @@
         };
 
         p.removeSubShape = function (idShapeChild) {
+            alert(idShapeChild);
             let isFindChild = false;
             let childNumberIndex = 0;
             if (this.children.length <= 4) {
@@ -150,8 +151,11 @@
                 window.removeShape(this.name);
             } else {
                 for (let child in this.children) {
-                    if (this.children[child].name === idShapeChild) {
+                    if (this.children[child].name == idShapeChild) {
                         childNumberIndex = child;
+                        alert(childNumberIndex);
+                        alert(this.children[child].name);
+                        alert(this.children[childNumberIndex].name);
                         delete this.dicParamsClassifier[idShapeChild];
                         isFindChild = true;
                     } else {

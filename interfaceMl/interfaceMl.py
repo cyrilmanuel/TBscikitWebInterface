@@ -17,6 +17,8 @@ from sklearn.ensemble import VotingClassifier
 from sklearn.externals import joblib
 from sklearn.model_selection import cross_val_score
 from sklearn.utils.testing import all_estimators
+from sklearn.datasets import load_iris
+
 
 # import others files in application.
 import interfaceMl.extractSqlToPickle
@@ -26,6 +28,11 @@ with open('interfaceMl/DataSet/x_data_filtered.pickle', 'rb') as f:
 
 with open('interfaceMl/DataSet/y_data_filtered.pickle', 'rb') as f:
     y_data_filtered = pickle.load(f)
+
+iris = load_iris()
+x_data_filtered = iris.data
+y_data_filtered = iris.target
+
 
 dictDataToSendEstimator = {}
 # dictEstimator for stocking object class and name objet
@@ -187,40 +194,42 @@ class MatrixImage(Resource):
 
     def post(self):
         receive_json = request.get_json()
-
-        # TODO DIFF BETWEEN CLASSIFIER AND REGRESSOR
         print(receive_json)
-        for k, v in receive_json['params'].items():
-            if (k != "ensemble Learning"):
-                v.pop('resultat', None)
-                try:
-                    rf = dictEstimator[k]()
-                except:
-                    rf = dictEstimatorRegr[k]()
-                rf.set_params(**v)
-                rf.fit(x_data_filtered, y_data_filtered)
-                skplt.plot_learning_curve(rf, x_data_filtered, y_data_filtered)
-                plt.title("Learning curve for {0}".format(k))
-                plt.savefig('interfaceMl/DataSet/matrix.png')
-                return "OK"
-            else:
-                estimators = []
-                v.pop('resultat', None)
-                for i, j in v.items():
-                    for e, fn in j.items():
-                        try:
-                            clfChild = dictEstimator[e]()
-                        except:
-                            clfChild = dictEstimatorRegr[e]()
-                        # send params issue by the request
-                        clfChild.set_params(**fn)
-                        estimators.append((e, clfChild))
-                        rf = VotingClassifier(estimators)
-                        rf.fit(x_data_filtered, y_data_filtered)
-                        skplt.plot_learning_curve(rf, x_data_filtered, y_data_filtered)
-                        plt.title("Learning curve for {0}".format(k))
-                        plt.savefig('interfaceMl/DataSet/matrix.png')
-                        return "OK"
+        error = False
+        try:
+            for k, v in receive_json['params'].items():
+                if (k != "ensemble Learning"):
+                    v.pop('resultat', None)
+                    try:
+                        rf = dictEstimator[k]()
+                    except:
+                        rf = dictEstimatorRegr[k]()
+                    rf.set_params(**v)
+                    rf.fit(x_data_filtered, y_data_filtered)
+                    skplt.plot_learning_curve(rf, x_data_filtered, y_data_filtered)
+                    plt.title("Learning curve for {0}".format(k))
+                    plt.savefig('interfaceMl/DataSet/matrix.png')
+                    return jsonify()
+                else:
+                    estimators = []
+                    v.pop('resultat', None)
+                    for i, j in v.items():
+                        for e, fn in j.items():
+                            try:
+                                clfChild = dictEstimator[e]()
+                            except:
+                                clfChild = dictEstimatorRegr[e]()
+                            # send params issue by the request
+                            clfChild.set_params(**fn)
+                            estimators.append((e, clfChild))
+                            rf = VotingClassifier(estimators)
+                            rf.fit(x_data_filtered, y_data_filtered)
+                            skplt.plot_learning_curve(rf, x_data_filtered, y_data_filtered)
+                            plt.title("Learning curve for {0}".format(k))
+                            plt.savefig('interfaceMl/DataSet/matrix.png')
+        except Exception as e:
+            error = True
+        return jsonify(error)
 
 
 class PickleFile(Resource):
@@ -335,18 +344,18 @@ class UseScikit(Resource):
                     try:
                         clfEnsemble = VotingClassifier(estimators)
 
-                        # évaluate the scoring
-                        scores = cross_val_score(clfEnsemble, x_data_filtered, y_data_filtered, cv=3)
-
                         if typeOfClassifier == "classifier":
 
                             # Stock the result into variable resultat
+                            # évaluate the scoring
+                            scores = cross_val_score(clfEnsemble, x_data_filtered, y_data_filtered, cv=3)
                             resultatFinal = ("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
 
                         elif typeOfClassifier == "regressor":
-
+                            # évaluate the scoring
+                            scores = cross_val_score(clfEnsemble, x_data_filtered, y_data_filtered, cv=3, scoring='neg_mean_squared_error')
                             # Stock the result into variable resultat
-                            resultatFinal = ("Accuracy: %0.2f" % (scores.mean()))
+                            resultatFinal = ("negatif mean squared error: %0.2f" % (scores.mean()))
 
                     except Exception:
                         resultatFinal += traceback.format_exc()
@@ -377,11 +386,11 @@ class UseScikit(Resource):
                             clf.set_params(**newValue)
                             # évaluate the scoring
                             scores = cross_val_score(clf, x_data_filtered, y_data_filtered,
-                                                     scoring='mean_squared_error',
+                                                     scoring='neg_mean_squared_error',
                                                      cv=3)
 
                             # Stock the result into variable resultat
-                            resultatFinal = ("Accuracy: %0.2f" % (scores.mean()))
+                            resultatFinal = ("negatif mean squared error: %0.2f" % (scores.mean()))
 
                     except Exception:
                         resultatFinal += traceback.format_exc()
