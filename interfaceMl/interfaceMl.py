@@ -209,33 +209,62 @@ class PickleFile(Resource):
     def post(self):
         receive_json = request.get_json()
 
-        print(receive_json)
         for nameClassifier, dictParams in receive_json.items():
-            typeOfClassifier = dictParams.pop('typeOf', None)
-            resultValidation = validationClassifier(dictParams, nameClassifier, typeOfClassifier)
-            newValue = resultValidation[0]
-            resultatf = resultValidation[1]
-            if type(resultatf) == str and not (resultatf and resultatf.strip()):
-                try:
-                    if typeOfClassifier == "classifier":
-                        # create the classificator
-                        clf = dictEstimator[nameClassifier]()
-                        # send params issue by the request
-                        clf.set_params(**newValue)
+            if nameClassifier == 'ensemble Learning':
+                estimators = []
+                resultatFinal = ""
+                for index, classifier, in dictParams.items():
+                    for nameSubClass, dicoValueParams, in classifier.items():
+                        typeOfClassifier = dicoValueParams.pop('typeOf', None)
+                        resultValidation = validationClassifier(dicoValueParams, nameSubClass, typeOfClassifier)
+                        newValue = resultValidation[0]
+                        if type(resultValidation[1]) == str and not (resultValidation[1] and resultValidation[1].strip()):
+                            clfChild = dictEstimator[nameSubClass]()
+                            # send params issue by the request
+                            clfChild.set_params(**newValue)
 
-                    elif typeOfClassifier == "regressor":
-                        # create the classificator
-                        clf = dictEstimatorRegr[nameClassifier]()
-                        # send params issue by the request
-                        clf.set_params(**newValue)
+                            estimators.append((nameSubClass, clfChild))
+                        else:
+                            resultatFinal += "{0} in {1}.\n".format(resultValidation[1], nameSubClass)
+                if type(resultatFinal) == str and not (resultatFinal and resultatFinal.strip()):
+                    try:
+                        clfEnsemble = VotingClassifier(estimators)
+                        clfEnsemble.fit(x_data_filtered, y_data_filtered)
+                        joblib.dump(clfEnsemble, 'interfaceMl/DataSet/newModel.pkl')
 
-                    clf.fit(x_data_filtered, y_data_filtered)
-                    joblib.dump(clf, 'interfaceMl/DataSet/newModel.pkl')
+                    except Exception:
+                        resultatFinal += traceback.format_exc()
+                        # return all result processed
 
-                except Exception:
-                    resultatf += traceback.format_exc()
-                    # return all result processed
-            return jsonify(resultatf)
+            else:
+                typeOfClassifier = dictParams.pop('typeOf', None)
+                resultValidation = validationClassifier(dictParams, nameClassifier, typeOfClassifier)
+                newValue = resultValidation[0]
+                resultatFinal = resultValidation[1]
+                if type(resultatFinal) == str and not (resultatFinal and resultatFinal.strip()):
+                    try:
+                        if typeOfClassifier == "classifier":
+                            # create the classificator
+                            clf = dictEstimator[nameClassifier]()
+                            # send params issue by the request
+                            clf.set_params(**newValue)
+
+                        elif typeOfClassifier == "regressor":
+                            # create the classificator
+                            clf = dictEstimatorRegr[nameClassifier]()
+                            # send params issue by the request
+                            clf.set_params(**newValue)
+                            # évaluate the scoring
+
+                        clf.fit(x_data_filtered, y_data_filtered)
+                        joblib.dump(clf, 'interfaceMl/DataSet/newModel.pkl')
+
+                    except Exception:
+                        resultatFinal += traceback.format_exc()
+                        # return all result processed
+
+        receive_json[nameClassifier]['resultat'] = resultatFinal
+        return jsonify(receive_json)
 
 
 class UseScikit(Resource):
