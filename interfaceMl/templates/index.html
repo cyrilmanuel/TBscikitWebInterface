@@ -180,13 +180,14 @@
         };
         window.startDownload = function (idShape) {
             let dataToSend = stage.getChildByName(idShape).getDataDict();
+            console.log(dataToSend);
             $.ajax({
                 async: true,
                 url: 'index/getfile',
                 dataType: 'text',
                 type: 'post',
                 contentType: 'application/json',
-                data: JSON.stringify(dataToSend[0]),
+                data: JSON.stringify(dataToSend),
                 success: function (dataReceive, textStatus, jQxhr) {
                     window.open('index/getfile', 'Download');
                 },
@@ -230,6 +231,7 @@
                 Materialize.toast('Nothing to process !', 3000, 'rounded');
             } else {
                 Materialize.toast('all cross-validation done !', 3000, 'rounded');
+                shareRenderInitFormulaireShape();
             }
         });
 
