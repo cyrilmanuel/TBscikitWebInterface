@@ -9,8 +9,7 @@ from importlib import import_module
 import matplotlib.pyplot as plt
 from scikitplot import plotters as skplt
 from numpydoc.docscrape import NumpyDocString
-from flask import Flask, request, redirect, url_for, \
-    render_template, flash, jsonify, send_file
+from flask import Flask, request, render_template, jsonify, send_file
 from flask_restful import Resource, Api
 from sklearn.ensemble import VotingClassifier
 from sklearn.externals import joblib
@@ -33,21 +32,19 @@ iris = load_iris()
 x_data_filtered = iris.data
 y_data_filtered = iris.target
 
-dictDataToSendEstimator = {}
-# dictEstimator for stocking object class and name objet
+
+# Dict store data for classificator
 dictTypeEstimator = {}
 dictEstimator = {}
-
-# to store params estimator and name
 dictParamEstimator = {}
 dictDescriptionParam = {}
 
+# Dict store data for regressor
 dictTypeEstimatorRegr = {}
 dictEstimatorRegr = {}
-
-# to store params estimator and name
 dictParamEstimatorRegr = {}
 dictDescriptionParamRegr = {}
+
 # list object receive by post
 listProcess = [
 ]
@@ -95,6 +92,7 @@ def getDicoParams(instanceClassifier):
 
 
 for name, class_ in all_estimators():
+
     # Retrieves the type of the current estimator
     typeclass = str(getattr(class_, "_estimator_type", None))
 
@@ -184,238 +182,6 @@ def validationClassifier(dictParams, nameClassifier, typeOf):
     return (newValue, errorReturn)
 
 
-class MatrixImage(Resource):
-    def get(self):
-        return send_file('DataSet/matrix.png',
-                         mimetype='image/png',
-                         attachment_filename='matrix.png',
-                         as_attachment=True)
-
-    def post(self):
-        receive_json = request.get_json()
-        print(receive_json)
-        error = False
-        try:
-            for k, v in receive_json['params'].items():
-                if (k != "ensemble Learning"):
-                    v.pop('resultat', None)
-                    try:
-                        rf = dictEstimator[k]()
-                    except:
-                        rf = dictEstimatorRegr[k]()
-                    rf.set_params(**v)
-                    rf.fit(x_data_filtered, y_data_filtered)
-                    skplt.plot_learning_curve(rf, x_data_filtered, y_data_filtered)
-                    plt.title("Learning curve for {0}".format(k))
-                    plt.savefig('interfaceMl/DataSet/matrix.png')
-                    return jsonify()
-                else:
-                    estimators = []
-                    v.pop('resultat', None)
-                    for i, j in v.items():
-                        for e, fn in j.items():
-                            try:
-                                clfChild = dictEstimator[e]()
-                            except:
-                                clfChild = dictEstimatorRegr[e]()
-                            # send params issue by the request
-                            clfChild.set_params(**fn)
-                            estimators.append((e, clfChild))
-                            rf = VotingClassifier(estimators)
-                            rf.fit(x_data_filtered, y_data_filtered)
-                            skplt.plot_learning_curve(rf, x_data_filtered, y_data_filtered)
-                            plt.title("Learning curve for {0}".format(k))
-                            plt.savefig('interfaceMl/DataSet/matrix.png')
-        except Exception as e:
-            error = True
-        return jsonify(error)
-
-
-class PickleFile(Resource):
-    def get(self):
-        return send_file('DataSet/newModel.pkl',
-                         mimetype='application/python-pickle',
-                         attachment_filename='newModel.pkl',
-                         as_attachment=True)
-
-    def post(self):
-        receive_json = request.get_json()
-
-        for nameClassifier, dictParams in receive_json.items():
-            if nameClassifier == 'ensemble Learning':
-                estimators = []
-                typeOfClassifier =""
-                resultatFinal = ""
-                for index, classifier, in dictParams.items():
-                    for nameSubClass, dicoValueParams, in classifier.items():
-                        typeOfClassifier = dicoValueParams.pop('typeOf', None)
-                        resultValidation = validationClassifier(dicoValueParams, nameSubClass, typeOfClassifier)
-                        newValue = resultValidation[0]
-                        if type(resultValidation[1]) == str and not (
-                                    resultValidation[1] and resultValidation[1].strip()):
-                            if typeOfClassifier == "classifier":
-                                clfChild = dictEstimator[nameSubClass]()
-                            elif typeOfClassifier == "regressor":
-                                clfChild = dictEstimatorRegr[nameSubClass]()
-                            # send params issue by the request
-                            clfChild.set_params(**newValue)
-
-                            estimators.append((nameSubClass, clfChild))
-                        else:
-                            resultatFinal += "{0} in {1}.\n".format(resultValidation[1], nameSubClass)
-                if type(resultatFinal) == str and not (resultatFinal and resultatFinal.strip()):
-                    try:
-                        #TODO SAME LIKE CROSS VALIDATION, TEST FOR BOTH TYPE REGRESSION
-                       if(typeOfClassifier=="classifier"):
-                            clfEnsemble = VotingClassifier(estimators)
-                            clfEnsemble.fit(x_data_filtered, y_data_filtered)
-                       elif(typeOfClassifier=="regressor"):
-
-                           est = [b for a, b in estimators]
-                           svr_rbf = SVR(kernel='rbf')
-                           clfEnsemble = StackingRegressor(regressors=est,
-                                                           meta_regressor=svr_rbf)
-                        # évaluate the scoring
-                        joblib.dump(clfEnsemble, 'interfaceMl/DataSet/newModel.pkl')
-
-                    except Exception:
-                        resultatFinal += traceback.format_exc()
-                        # return all result processed
-
-            else:
-                typeOfClassifier = dictParams.pop('typeOf', None)
-                resultValidation = validationClassifier(dictParams, nameClassifier, typeOfClassifier)
-                newValue = resultValidation[0]
-                resultatFinal = resultValidation[1]
-                if type(resultatFinal) == str and not (resultatFinal and resultatFinal.strip()):
-                    try:
-                        if typeOfClassifier == "classifier":
-                            # create the classificator
-                            clf = dictEstimator[nameClassifier]()
-                            # send params issue by the request
-                            clf.set_params(**newValue)
-
-                        elif typeOfClassifier == "regressor":
-                            # create the classificator
-                            clf = dictEstimatorRegr[nameClassifier]()
-                            # send params issue by the request
-                            clf.set_params(**newValue)
-                            # évaluate the scoring
-
-                        clf.fit(x_data_filtered, y_data_filtered)
-                        joblib.dump(clf, 'interfaceMl/DataSet/newModel.pkl')
-
-                    except Exception:
-                        resultatFinal += traceback.format_exc()
-                        # return all result processed
-
-        receive_json[nameClassifier]['resultat'] = resultatFinal
-        return jsonify(receive_json)
-
-
-class UseScikit(Resource):
-    def get(self):
-        # return dictionnary {nameClassifier : {Params1:value1, Params2:value2}}
-        # tab = [dictParamEstimator, dictDescriptionParam]
-        data = {"regressor": [dictParamEstimatorRegr, dictDescriptionParamRegr],
-                "classifier": [dictParamEstimator, dictDescriptionParam]}
-        return jsonify(data)
-
-    def post(self):
-        # checker si les objets sont dans la liste et ne pas
-        # faire de calcul si il y sont. juste retourner la réponse
-        listProcess.clear()
-        receive_json = request.get_json()
-        resultatFinal = ""
-
-        for nameClassifier, dictParams in receive_json.items():
-            if nameClassifier == 'ensemble Learning':
-                estimators = []
-                for index, classifier, in dictParams.items():
-                    for nameSubClass, dicoValueParams, in classifier.items():
-                        typeOfClassifier = dicoValueParams.pop('typeOf', None)
-                        resultValidation = validationClassifier(dicoValueParams, nameSubClass, typeOfClassifier)
-                        newValue = resultValidation[0]
-
-                        if type(resultValidation[1]) == str and not (
-                                    resultValidation[1] and resultValidation[1].strip()):
-                            if typeOfClassifier == "classifier":
-                                clfChild = dictEstimator[nameSubClass]()
-                            elif typeOfClassifier == "regressor":
-                                clfChild = dictEstimatorRegr[nameSubClass]()
-                            # send params issue by the request
-                            clfChild.set_params(**newValue)
-
-                            estimators.append((nameSubClass, clfChild))
-                        else:
-                            resultatFinal += "{0} in {1}.\n".format(resultValidation[1], nameSubClass)
-                if type(resultatFinal) == str and not (resultatFinal and resultatFinal.strip()):
-                    try:
-
-                        if typeOfClassifier == "classifier":
-
-                            clfEnsemble = VotingClassifier(estimators)
-                            # Stock the result into variable resultat
-                            # évaluate the scoring
-                            scores = cross_val_score(clfEnsemble, x_data_filtered, y_data_filtered, cv=3)
-                            resultatFinal = ("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
-
-                        elif typeOfClassifier == "regressor":
-
-                            est = [b for a,b in estimators]
-                            print(est)
-                            svr_rbf = SVR(kernel='rbf')
-                            clfEnsemble = StackingRegressor(regressors=est,
-                                                            meta_regressor=svr_rbf)
-                            # évaluate the scoring
-                            scores = cross_val_score(clfEnsemble, x_data_filtered, y_data_filtered, cv=3,
-                                                     scoring='neg_mean_squared_error')
-                            # Stock the result into variable resultat
-                            resultatFinal = ("negatif mean squared error: %0.2f" % (scores.mean()))
-
-                    except Exception:
-                        resultatFinal += traceback.format_exc()
-                        # return all result processed
-
-            else:
-                typeOfClassifier = dictParams.pop('typeOf', None)
-                resultValidation = validationClassifier(dictParams, nameClassifier, typeOfClassifier)
-                newValue = resultValidation[0]
-                resultatFinal = resultValidation[1]
-                if type(resultatFinal) == str and not (resultatFinal and resultatFinal.strip()):
-                    try:
-                        if typeOfClassifier == "classifier":
-                            # create the classificator
-                            clf = dictEstimator[nameClassifier]()
-                            # send params issue by the request
-                            clf.set_params(**newValue)
-                            # évaluate the scoring
-                            scores = cross_val_score(clf, x_data_filtered, y_data_filtered, cv=3)
-
-                            # Stock the result into variable resultat
-                            resultatFinal = ("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
-
-                        elif typeOfClassifier == "regressor":
-                            # create the classificator
-                            clf = dictEstimatorRegr[nameClassifier]()
-                            # send params issue by the request
-                            clf.set_params(**newValue)
-                            # évaluate the scoring
-                            scores = cross_val_score(clf, x_data_filtered, y_data_filtered,
-                                                     scoring='neg_mean_squared_error',
-                                                     cv=3)
-
-                            # Stock the result into variable resultat
-                            resultatFinal = ("negatif mean squared error: %0.2f" % (scores.mean()))
-
-                    except Exception:
-                        resultatFinal += traceback.format_exc()
-                        # return all result processed
-
-        receive_json[nameClassifier]['resultat'] = resultatFinal
-        return jsonify(receive_json)
-
-
 def create_app():
     # create the application instance :)
     app = Flask(__name__)
@@ -432,43 +198,280 @@ def create_app():
 
     api = Api(app)
 
-    # route to process Scikit-learn
-    api.add_resource(UseScikit, '/backend')
-    # route to process Scikit-learn
-    api.add_resource(PickleFile, '/index/getfile')
-    api.add_resource(MatrixImage, '/index/matrix')
-
-    # define the route of the index
-    @app.route('/index')
-    def index():
-        return render_template('index.html')
-
     def allowed_file(filename):
         return '.' in filename and \
                filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS_UPLOAD']
 
-    # define the route of the upload
-    @app.route('/', methods=['GET', 'POST'])
-    def upload_file():
-        if request.method == 'POST':
-            # check if the post request has the file part
+    class ImportBDD(Resource):
+        def post(self):
+            result = ""
             if 'file' not in request.files:
-                flash('No file part')
-                return redirect(request.url)
-            file = request.files['file']
-            print(file)
-            # if user does not select file, browser also
-            # submit a empty part without filename
-            if file.filename == '':
-                flash('No selected file')
-                return redirect(request.url)
-            if file and allowed_file(file.filename):
-                print(os.path.abspath('.'))
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], "dbUpload.sqlite3"))
-                interfaceMl.extractSqlToPickle.process()
+                result += 'No file part in request \n'
+            else:
+                file = request.files['file']
+                # if user does not select file, browser also
+                # submit a empty part without filename
+                if file.filename == '':
+                    result += 'No selected file \n'
 
-                return redirect(url_for('index'))
+                elif file and allowed_file(file.filename):
+                    # print(os.path.abspath('.'))
+                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], "dbUpload.sqlite3"))
+                    try:
+                        interfaceMl.extractSqlToPickle.process()
+                    except Exception as e:
+                        result += "extract data from BDD failed"
+                else:
+                    result = "Wrong file format !"
+            return jsonify(result)
+
+    class MatrixImage(Resource):
+        def get(self):
+            return send_file('DataSet/matrix.png',
+                             mimetype='image/png',
+                             attachment_filename='matrix.png',
+                             as_attachment=True)
+
+        def post(self):
+            receive_json = request.get_json()
+            print(receive_json)
+            idShape, nameAndParams = next(iter(receive_json['params'].items()))
+            print(idShape)
+            print(nameAndParams)
+            error = False
+            try:
+                for k, v in nameAndParams.items():
+                    if (k != "ensemble Learning"):
+                        v.pop('resultat', None)
+                        try:
+                            rf = dictEstimator[k]()
+                        except:
+                            rf = dictEstimatorRegr[k]()
+                        rf.set_params(**v)
+                        rf.fit(x_data_filtered, y_data_filtered)
+                        skplt.plot_learning_curve(rf, x_data_filtered, y_data_filtered)
+                        plt.title("Learning curve for {0} ID {1}".format(k, idShape))
+                        plt.savefig('interfaceMl/DataSet/matrix.png')
+                    else:
+                        estimators = []
+                        v.pop('resultat', None)
+                        for i, j in v.items():
+                            for e, fn in j.items():
+                                try:
+                                    clfChild = dictEstimator[e]()
+                                except:
+                                    clfChild = dictEstimatorRegr[e]()
+                                # send params issue by the request
+                                clfChild.set_params(**fn)
+                                estimators.append((e, clfChild))
+                                rf = VotingClassifier(estimators)
+                                rf.fit(x_data_filtered, y_data_filtered)
+                                skplt.plot_learning_curve(rf, x_data_filtered, y_data_filtered)
+                                plt.title("Learning curve for {0} ID {1}".format(k, idShape))
+                                plt.savefig('interfaceMl/DataSet/matrix.png')
+            except Exception as e:
+                print(e)
+                error = True
+            return jsonify(error)
+
+    class PickleFile(Resource):
+        def get(self):
+            return send_file('DataSet/newModel.pkl',
+                             mimetype='application/python-pickle',
+                             attachment_filename='newModel.pkl',
+                             as_attachment=True)
+
+        def post(self):
+            receive_json = request.get_json()
+            error = False
+            try:
+                for nameClassifier, dictParams in receive_json.items():
+                    if nameClassifier == 'ensemble Learning':
+                        estimators = []
+                        typeOfClassifier = ""
+                        resultatFinal = ""
+                        for index, classifier, in dictParams.items():
+                            for nameSubClass, dicoValueParams, in classifier.items():
+                                typeOfClassifier = dicoValueParams.pop('typeOf', None)
+                                resultValidation = validationClassifier(dicoValueParams, nameSubClass,
+                                                                        typeOfClassifier)
+                                newValue = resultValidation[0]
+                                if type(resultValidation[1]) == str and not (
+                                            resultValidation[1] and resultValidation[1].strip()):
+                                    if typeOfClassifier == "classifier":
+                                        clfChild = dictEstimator[nameSubClass]()
+                                    elif typeOfClassifier == "regressor":
+                                        clfChild = dictEstimatorRegr[nameSubClass]()
+                                    # send params issue by the request
+                                    clfChild.set_params(**newValue)
+
+                                    estimators.append((nameSubClass, clfChild))
+                                else:
+                                    resultatFinal += "{0} in {1}.\n".format(resultValidation[1], nameSubClass)
+                        if type(resultatFinal) == str and not (resultatFinal and resultatFinal.strip()):
+                            try:
+                                if (typeOfClassifier == "classifier"):
+                                    clfEnsemble = VotingClassifier(estimators)
+                                    clfEnsemble.fit(x_data_filtered, y_data_filtered)
+                                elif (typeOfClassifier == "regressor"):
+
+                                    est = [b for a, b in estimators]
+                                    svr_rbf = SVR(kernel='rbf')
+                                    clfEnsemble = StackingRegressor(regressors=est,
+                                                                    meta_regressor=svr_rbf)
+                                # évaluate the scoring
+                                joblib.dump(clfEnsemble, 'interfaceMl/DataSet/newModel.pkl')
+
+                            except Exception:
+                                resultatFinal += traceback.format_exc()
+                                # return all result processed
+
+                    else:
+                        typeOfClassifier = dictParams.pop('typeOf', None)
+                        resultValidation = validationClassifier(dictParams, nameClassifier, typeOfClassifier)
+                        newValue = resultValidation[0]
+                        resultatFinal = resultValidation[1]
+                        if type(resultatFinal) == str and not (resultatFinal and resultatFinal.strip()):
+                            try:
+                                if typeOfClassifier == "classifier":
+                                    # create the classificator
+                                    clf = dictEstimator[nameClassifier]()
+                                    # send params issue by the request
+                                    clf.set_params(**newValue)
+
+                                elif typeOfClassifier == "regressor":
+                                    # create the classificator
+                                    clf = dictEstimatorRegr[nameClassifier]()
+                                    # send params issue by the request
+                                    clf.set_params(**newValue)
+                                    # évaluate the scoring
+
+                                clf.fit(x_data_filtered, y_data_filtered)
+                                joblib.dump(clf, 'interfaceMl/DataSet/newModel.pkl')
+
+                            except Exception:
+                                resultatFinal += traceback.format_exc()
+                                # return all result processed
+            except Exception as e:
+                error = True
+            return jsonify(error)
+
+    class UseScikit(Resource):
+        def get(self):
+            # return dictionnary {nameClassifier : {Params1:value1, Params2:value2}}
+            # tab = [dictParamEstimator, dictDescriptionParam]
+            data = {"regressor": [dictParamEstimatorRegr, dictDescriptionParamRegr],
+                    "classifier": [dictParamEstimator, dictDescriptionParam]}
+            return jsonify(data)
+
+        def post(self):
+            # checker si les objets sont dans la liste et ne pas
+            # faire de calcul si il y sont. juste retourner la réponse
+            listProcess.clear()
+            receive_json = request.get_json()
+            resultatFinal = ""
+
+            for nameClassifier, dictParams in receive_json.items():
+                if nameClassifier == 'ensemble Learning':
+                    estimators = []
+                    for index, classifier, in dictParams.items():
+                        for nameSubClass, dicoValueParams, in classifier.items():
+                            typeOfClassifier = dicoValueParams.pop('typeOf', None)
+                            resultValidation = validationClassifier(dicoValueParams, nameSubClass, typeOfClassifier)
+                            newValue = resultValidation[0]
+
+                            if type(resultValidation[1]) == str and not (
+                                        resultValidation[1] and resultValidation[1].strip()):
+                                if typeOfClassifier == "classifier":
+                                    clfChild = dictEstimator[nameSubClass]()
+                                elif typeOfClassifier == "regressor":
+                                    clfChild = dictEstimatorRegr[nameSubClass]()
+                                # send params issue by the request
+                                clfChild.set_params(**newValue)
+
+                                estimators.append((nameSubClass, clfChild))
+                            else:
+                                resultatFinal += "{0} in {1}.\n".format(resultValidation[1], nameSubClass)
+                    if type(resultatFinal) == str and not (resultatFinal and resultatFinal.strip()):
+                        try:
+
+                            if typeOfClassifier == "classifier":
+
+                                clfEnsemble = VotingClassifier(estimators)
+                                # Stock the result into variable resultat
+                                # évaluate the scoring
+                                scores = cross_val_score(clfEnsemble, x_data_filtered, y_data_filtered, cv=3)
+                                resultatFinal = ("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
+
+                            elif typeOfClassifier == "regressor":
+
+                                est = [b for a, b in estimators]
+                                print(est)
+                                svr_rbf = SVR(kernel='rbf')
+                                clfEnsemble = StackingRegressor(regressors=est,
+                                                                meta_regressor=svr_rbf)
+                                # évaluate the scoring
+                                scores = cross_val_score(clfEnsemble, x_data_filtered, y_data_filtered, cv=3,
+                                                         scoring='neg_mean_squared_error')
+                                # Stock the result into variable resultat
+                                resultatFinal = ("negatif mean squared error: %0.2f" % (scores.mean()))
+
+                        except Exception:
+                            resultatFinal += traceback.format_exc()
+                            # return all result processed
+
+                else:
+                    typeOfClassifier = dictParams.pop('typeOf', None)
+                    resultValidation = validationClassifier(dictParams, nameClassifier, typeOfClassifier)
+                    newValue = resultValidation[0]
+                    resultatFinal = resultValidation[1]
+                    if type(resultatFinal) == str and not (resultatFinal and resultatFinal.strip()):
+                        try:
+                            if typeOfClassifier == "classifier":
+                                # create the classificator
+                                clf = dictEstimator[nameClassifier]()
+                                # send params issue by the request
+                                clf.set_params(**newValue)
+                                # évaluate the scoring
+                                scores = cross_val_score(clf, x_data_filtered, y_data_filtered, cv=3)
+
+                                # Stock the result into variable resultat
+                                resultatFinal = ("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
+
+                            elif typeOfClassifier == "regressor":
+                                # create the classificator
+                                clf = dictEstimatorRegr[nameClassifier]()
+                                # send params issue by the request
+                                clf.set_params(**newValue)
+                                # évaluate the scoring
+                                scores = cross_val_score(clf, x_data_filtered, y_data_filtered,
+                                                         scoring='neg_mean_squared_error',
+                                                         cv=3)
+
+                                # Stock the result into variable resultat
+                                resultatFinal = ("negatif mean squared error: %0.2f" % (scores.mean()))
+
+                        except Exception:
+                            resultatFinal += traceback.format_exc()
+                            # return all result processed
+
+            receive_json[nameClassifier]['resultat'] = resultatFinal
+            return jsonify(receive_json)
+
+    # route to process REST
+    api.add_resource(ImportBDD, '/importbdd')
+    api.add_resource(UseScikit, '/index/process')
+    api.add_resource(PickleFile, '/index/model')
+    api.add_resource(MatrixImage, '/index/linearcurve')
+
+    #  Define the primary route for upload file
+    @app.route('/')
+    def upload_file():
         return render_template('upload.html')
+
+    @app.route('/index')
+    def index():
+        return render_template('index.html')
 
     # Load default config and override config from an environment variable
     app.config.from_envvar('INTERFACEML_SETTINGS', silent=True)

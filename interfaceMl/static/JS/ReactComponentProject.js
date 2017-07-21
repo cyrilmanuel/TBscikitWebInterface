@@ -21,8 +21,8 @@ class TypeOfButtonList extends React.Component {
             );
         });
         return (
-        <div className="row">
-            <div className="collection">{rows}</div>
+            <div className="row">
+                <div className="collection">{rows}</div>
             </div>
         );
     }
@@ -39,20 +39,20 @@ class ButtonList extends React.Component {
     constructor(props) {
         super(props);
         this.allDataClassifier = this.props.allDataClassifier;
-        this.typeOfDataClassifier= this.props.typeOfDataClassifier;
-        this.descriptionDataClassifier =this.allDataClassifier[this.typeOfDataClassifier][1];
+        this.typeOfDataClassifier = this.props.typeOfDataClassifier;
+        this.descriptionDataClassifier = this.allDataClassifier[this.typeOfDataClassifier][1];
         this.dataClassifier = this.allDataClassifier[this.typeOfDataClassifier][0];
         this.onClick = this.onClick.bind(this);
         this.handleReturn = this.handleReturn.bind(this);
     }
 
-    handleReturn(event){
-      shareRenderResetButtonList();
-      shareRenderTypeOfButtonList(this.allDataClassifier);
+    handleReturn(event) {
+        shareRenderResetButtonList();
+        shareRenderTypeOfButtonList(this.allDataClassifier);
     }
 
     onClick(event) {
-        window.addShape(event.target.id, this.dataClassifier[event.target.id], this.descriptionDataClassifier[event.target.id],this.typeOfDataClassifier);
+        window.addShape(event.target.id, this.dataClassifier[event.target.id], this.descriptionDataClassifier[event.target.id], this.typeOfDataClassifier);
     }
 
     render() {
@@ -66,7 +66,7 @@ class ButtonList extends React.Component {
             <div className="row">
                 <a className="waves-effect waves-light btn" name="return" onClick={this.handleReturn}
                    key="return">Return</a>
-            <div className="collection">{rows}</div>
+                <div className="collection">{rows}</div>
             </div>
         );
     }
@@ -101,7 +101,7 @@ class EnsembleList extends React.Component {
         this.handleDownload = this.handleDownload.bind(this);
     }
 
-     handleDownload(event){
+    handleDownload(event) {
         window.startDownload(this.IdEnsembleLearning);
     }
 
@@ -114,7 +114,7 @@ class EnsembleList extends React.Component {
 
     onClick(event) {
         shareRenderInitFormulaireShape();
-        shareRenderFormEnsemble(this.dataClassifier[event.target.id][event.target.name],this.descriptionClassifier[event.target.id][event.target.name], event.target.name, event.target.id, this.IdEnsembleLearning, this.dataClassifier, this.descriptionClassifier);
+        shareRenderFormEnsemble(this.dataClassifier[event.target.id][event.target.name], this.descriptionClassifier[event.target.id][event.target.name], event.target.name, event.target.id, this.IdEnsembleLearning, this.dataClassifier, this.descriptionClassifier);
     }
 
     render() {
@@ -149,9 +149,10 @@ class EnsembleList extends React.Component {
 }
 ;
 
-window.shareRenderEnsembleList = function (dataClassifier,descriptionClassifier, IdEnsembleLearning) {
+window.shareRenderEnsembleList = function (dataClassifier, descriptionClassifier, IdEnsembleLearning) {
     ReactDOM.render(
-        <EnsembleList dataClassifier={dataClassifier} IdEnsembleLearning={IdEnsembleLearning} descriptionClassifier={descriptionClassifier}/>,
+        <EnsembleList dataClassifier={dataClassifier} IdEnsembleLearning={IdEnsembleLearning}
+                      descriptionClassifier={descriptionClassifier}/>,
         document.getElementById('formClassificator')
     );
 };
@@ -173,14 +174,14 @@ class Formul extends React.Component {
     }
 
     handleChange(event) {
-        this.setState({[event.target.name]: event.target.value},()=>window.updateShapeParam(this.idShape, this.state));
+        this.setState({[event.target.name]: event.target.value}, () => window.updateShapeParam(this.idShape, this.state));
     }
 
     handleInfo(event) {
         alert(this.dictDescriptionParamsClassifier[event.currentTarget.name]);
     }
 
-    handleDownload(event){
+    handleDownload(event) {
         window.startDownload(this.idShape);
     }
 
@@ -258,12 +259,12 @@ class FormEnsemble extends React.Component {
         this.handleInfo = this.handleInfo.bind(this);
     }
 
-    handleInfo(event){
+    handleInfo(event) {
         alert(this.props.dictDescriptionParamsClassifier[event.currentTarget.name]);
     }
 
     handleChange(event) {
-        this.setState({[event.target.name]: event.target.value},function(){
+        this.setState({[event.target.name]: event.target.value}, function () {
             window.updateShapeEnsembleParam(this.idShape, this.state, this.props.idShapeParent, this.name);
             this.allClassifier[this.idShape][this.name] = this.state;
         });
@@ -300,7 +301,7 @@ class FormEnsemble extends React.Component {
                     ID of the shape : {this.props.idShape}
                 </div>
                 {Object.keys(this.state).map(name => {
-                   return (
+                    return (
                         <div key={'row-' + name} className="row">
                             <div className="col s6">
                                 <label key={'label-' + name}> {name}</label>
@@ -323,12 +324,13 @@ class FormEnsemble extends React.Component {
 }
 ;
 
-window.shareRenderFormEnsemble = function (dictParamsClassifier,dictDescriptionParamsClassifier, nameClassifier, idShape, idShapeParent, dictAllClassifier,dictAllDescription) {
+window.shareRenderFormEnsemble = function (dictParamsClassifier, dictDescriptionParamsClassifier, nameClassifier, idShape, idShapeParent, dictAllClassifier, dictAllDescription) {
     delete dictParamsClassifier["typeOf"];
     ReactDOM.render(
         <FormEnsemble dict={dictParamsClassifier} name={nameClassifier} idShape={idShape}
                       idShapeParent={idShapeParent} dictAllClassifier={dictAllClassifier}
-                       dictDescriptionParamsClassifier={dictDescriptionParamsClassifier} dictAllDescription={dictAllDescription} />,
+                      dictDescriptionParamsClassifier={dictDescriptionParamsClassifier}
+                      dictAllDescription={dictAllDescription}/>,
         document.getElementById('formClassificator')
     );
 };
@@ -348,15 +350,18 @@ class ResultDiv extends React.Component {
         this.nbRender = this.props.nb;
         this.responseDict = this.props.dict || {};
         this.tabResponseEmpty = Array.apply(null, {length: (this.nbRender - Object.keys(this.responseDict).length)}).map(Number.call, Number);
-        this.handleShowMatrix = this.handleShowMatrix.bind(this);
+        this.handleShowLinearCurve = this.handleShowLinearCurve.bind(this);
     }
 
-    handleShowMatrix(event) {
-        axios.post('/index/matrix', {
-            params:  this.responseDict[event.target.name],
+    handleShowLinearCurve(event) {
+        let dictTemp={};
+        dictTemp[event.target.name]=this.responseDict[event.target.name];
+        axios.post('/index/linearcurve', {
+            params: dictTemp,
+            responseType:'application/json',
         })
             .then(function (response) {
-                window.renderMatrix(response);
+                window.renderLinearCurve(response.data);
             })
             .catch(function (error) {
                 console.log(error);
@@ -367,13 +372,14 @@ class ResultDiv extends React.Component {
     render() {
         let result = Object.keys(this.responseDict).map(name => {
                 return (
-                    <div className="row" key={"row-"+name}>
-                        <div className="col s10" key={"cols10-"+name}>
-                            <div key={name}>Result for {Object.keys(this.responseDict[name])[0]} ID:{name} {this.responseDict[name][Object.keys(this.responseDict[name])[0]]['resultat']}
+                    <div className="row" key={"row-" + name}>
+                        <div className="col s10" key={"cols10-" + name}>
+                            <div key={name}>Result for {Object.keys(this.responseDict[name])[0]}
+                                ID:{name} {this.responseDict[name][Object.keys(this.responseDict[name])[0]]['resultat']}
                             </div>
                         </div>
-                        <div className="col s2" key={"cols2-"+name}>
-                            <a className="waves-effect waves-light btn-small" name={name} onClick={this.handleShowMatrix}
+                        <div className="col s2" key={"cols2-" + name}>
+                            <a className="waves-effect waves-light btn-small" name={name} onClick={this.handleShowLinearCurve}
                                key={"btnMatrix" + name}>Show Matrix</a>
                         </div>
                     </div>
@@ -382,18 +388,18 @@ class ResultDiv extends React.Component {
         );
         let listItems = Object.keys(this.tabResponseEmpty).map(index => {
                 return (
-                    <div className="row" key={"rowr-"+index}>
+                    <div className="row" key={"rowr-" + index}>
                         <div className="col s12" key={index}>
-                            <div className="preloader-wrapper active"  key={"preload-"+index}>
-                                <div className="spinner-layer spinner-green-only"  key={"spinner-"+index}>
-                                    <div className="circle-clipper left"  key={"circle-"+index}>
-                                        <div className="circle"  key={"cir-"+index}></div>
+                            <div className="preloader-wrapper active" key={"preload-" + index}>
+                                <div className="spinner-layer spinner-green-only" key={"spinner-" + index}>
+                                    <div className="circle-clipper left" key={"circle-" + index}>
+                                        <div className="circle" key={"cir-" + index}></div>
                                     </div>
-                                    <div className="gap-patch"  key={"gap-"+index}>
-                                        <div className="circle"  key={"circl-"+index}></div>
+                                    <div className="gap-patch" key={"gap-" + index}>
+                                        <div className="circle" key={"circl-" + index}></div>
                                     </div>
-                                    <div className="circle-clipper right" key={"clipper-"+index}>
-                                        <div className="circle"  key={"lastcircle-"+index}></div>
+                                    <div className="circle-clipper right" key={"clipper-" + index}>
+                                        <div className="circle" key={"lastcircle-" + index}></div>
                                     </div>
                                 </div>
                             </div>
@@ -403,7 +409,7 @@ class ResultDiv extends React.Component {
             }
         );
         return (
-            <div  key="Result">{result}{listItems}</div>
+            <div key="Result">{result}{listItems}</div>
         );
     }
 }
@@ -411,7 +417,7 @@ class ResultDiv extends React.Component {
 
 window.shareRenderResult = function (DictResultPost, nbResult) {
     ReactDOM.render(
-        <ResultDiv dict={DictResultPost} nb={nbResult} />,
+        <ResultDiv dict={DictResultPost} nb={nbResult}/>,
         document.getElementById('response')
     );
 };

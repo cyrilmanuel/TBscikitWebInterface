@@ -80,7 +80,7 @@
         // -------------------------- request Get in ajax ------------
         $.ajax({
             type: 'GET',
-            url: 'backend',
+            url: 'index/process',
             contentType: 'application/json',
             success: function (data) {
                 shareRenderTypeOfButtonList(data);
@@ -92,8 +92,9 @@
 
         // --------------------------------- init canvas ---------------------
         let stage = new createjs.Stage("demoCanvas");
-        createjs.Ticker.addEventListener("tick", function handleTick(){stage.update()});
-
+        createjs.Ticker.addEventListener("tick", function handleTick() {
+            stage.update()
+        });
 
 
         window.hitShape = function (nameShape) {
@@ -107,7 +108,7 @@
                                     // 2 shape yello
                                     if (confirm('ensemble learning ?')) {
                                         const sizeCanvas = {"width": stage.canvas.width, "height": stage.canvas.height};
-                                        let ensembleShapeTemp = new EnsembleShapeGenerator(idShape.toString(), sizeCanvas, stage.getChildByName(nameShape).getDataDict(), stage.children[indexShape].getDataDict(),stage.getChildByName(nameShape).getDescriptionDict(),stage.children[indexShape].getDescriptionDict(), stage.getChildByName(nameShape).typeOfClassifier);
+                                        let ensembleShapeTemp = new EnsembleShapeGenerator(idShape.toString(), sizeCanvas, stage.getChildByName(nameShape).getDataDict(), stage.children[indexShape].getDataDict(), stage.getChildByName(nameShape).getDescriptionDict(), stage.children[indexShape].getDescriptionDict(), stage.getChildByName(nameShape).typeOfClassifier);
                                         stage.addChild(ensembleShapeTemp);
                                         removeShape(stage.children[indexShape].name);
                                         removeShape(nameShape);
@@ -122,7 +123,7 @@
                                 if (stage.children[indexShape].typeOfClassifier === stage.getChildByName(nameShape).typeOfClassifier) {
                                     //same type classifier
                                     if (confirm('add shape to ensemble ?')) {
-                                        stage.children[indexShape].addClassifier(stage.getChildByName(nameShape).getDataDict(),stage.getChildByName(nameShape).getDescriptionDict());
+                                        stage.children[indexShape].addClassifier(stage.getChildByName(nameShape).getDataDict(), stage.getChildByName(nameShape).getDescriptionDict());
                                         removeShape(stage.getChildByName(nameShape).name);
                                     } else {
                                         stage.getChildByName(nameShape).resetPositionShape();
@@ -183,13 +184,17 @@
             console.log(dataToSend);
             $.ajax({
                 async: true,
-                url: 'index/getfile',
+                url: 'index/model',
                 dataType: 'text',
                 type: 'post',
                 contentType: 'application/json',
                 data: JSON.stringify(dataToSend),
-                success: function (dataReceive, textStatus, jQxhr) {
-                    window.open('index/getfile', 'Download');
+                success: function (response, textStatus, jQxhr) {
+                    if (JSON.parse(response) == false) {
+                        window.open('index/model', 'Download');
+                    } else {
+                        Materialize.toast('Error in creation of the PKL file', 2000, 'rounded');
+                    }
                 },
                 error: function (jqXhr, textStatus, errorThrown) {
                     console.log(errorThrown);
@@ -208,7 +213,7 @@
             arr.push(
                 $.ajax({
                     async: true,
-                    url: 'backend',
+                    url: 'index/process',
                     dataType: 'text',
                     type: 'post',
                     contentType: 'application/json',
@@ -216,7 +221,7 @@
                     success: function (dataReceive, textStatus, jQxhr) {
                         window.shareRenderResetResult();
                         let temp = JSON.parse(dataReceive);
-                        DictResult[name]=temp;
+                        DictResult[name] = temp;
                         window.shareRenderResult(DictResult, Object.keys(dataToSend).length);
                     },
                     error: function (jqXhr, textStatus, errorThrown) {
@@ -224,7 +229,8 @@
                     }
                 })
             )
-        };
+        }
+        ;
         $.when.apply(undefined, arr).then(function () {
             if (arr.length === 0) {
                 shareRenderResetResult();
@@ -237,13 +243,11 @@
 
     });
 
-    window.renderMatrix = function (response) {
-        console.log(response);
-        isOK = true;
-        if (isOK){
-             window.open('index/matrix', 'Download');
-        }else {
-            Materialize.toast('Error in création of the PNG', 2000, 'rounded');
+    window.renderLinearCurve = function (response) {
+        if (response == false) {
+            window.open('index/linearcurve', 'Download');
+        } else {
+            Materialize.toast('Error in creation of the PNG', 2000, 'rounded');
         }
 
     }
