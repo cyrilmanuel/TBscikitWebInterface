@@ -1,6 +1,7 @@
 /**
  * Created by cyriljeanneret on 14.06.17.
  */
+
 class TypeOfButtonList extends React.Component {
     constructor(props) {
         super(props);
@@ -44,6 +45,12 @@ class ButtonList extends React.Component {
         this.dataClassifier = this.allDataClassifier[this.typeOfDataClassifier][0];
         this.onClick = this.onClick.bind(this);
         this.handleReturn = this.handleReturn.bind(this);
+        this.buttonStyle = {
+            width: "100%",
+        };
+        this.scroll = {
+            overflow:"auto",
+        }
     }
 
     handleReturn(event) {
@@ -64,9 +71,14 @@ class ButtonList extends React.Component {
         });
         return (
             <div className="row">
-                <a className="waves-effect waves-light btn" name="return" onClick={this.handleReturn}
-                   key="return">Return</a>
-                <div className="collection">{rows}</div>
+                <div className="col-s12">
+                    <a className="waves-effect waves-light btn center-align" style={this.buttonStyle} name="return"
+                       onClick={this.handleReturn}
+                       key="return">Return</a>
+                </div>
+                <div className="col-s12" style={this.scrollbar}>
+                    <div className="collection">{rows}</div>
+                </div>
             </div>
         );
     }
@@ -99,6 +111,9 @@ class EnsembleList extends React.Component {
         this.onClick = this.onClick.bind(this);
         this.onDelete = this.onDelete.bind(this);
         this.handleDownload = this.handleDownload.bind(this);
+        this.buttonStyle = {
+            width: "100%",
+        };
     }
 
     handleDownload(event) {
@@ -123,12 +138,14 @@ class EnsembleList extends React.Component {
         let rows = [];
         let buttonDelete = <div className="row" key="rowBtn">
             <div className="col s6" key="colDelete">
-                <a className="waves-effect waves-light btn" name="Delete" onClick={this.onDelete}
+                <a className="waves-effect waves-light btn" style={this.buttonStyle} name="Delete"
+                   onClick={this.onDelete}
                    key="Delete">Delete Ensemble</a>
             </div>
             <div className="col s6" key="coldl">
-                <a className="waves-effect waves-light btn" name="DL" onClick={this.handleDownload}
-                   key="Download">Download</a>
+                <a className="waves-effect waves-light btn" style={this.buttonStyle} name="DL"
+                   onClick={this.handleDownload}
+                   key="Download">Download model</a>
             </div>
         </div>;
         for (let idshape in this.dataClassifier) {
@@ -139,7 +156,7 @@ class EnsembleList extends React.Component {
             }
         }
         ;
-        allrow = <div className="collection" key="collectionEnsemble">{rows}</div>
+        allrow = <div className="collection" key="collectionEnsemble">{rows}</div>;
         final.push(buttonDelete);
         final.push(allrow);
         return (
@@ -171,6 +188,10 @@ class Formul extends React.Component {
         this.handleChange = this.handleChange.bind(this);
         this.handleInfo = this.handleInfo.bind(this);
         this.handleDownload = this.handleDownload.bind(this);
+        this.buttonStyle = {
+            width: "100%",
+        };
+
     }
 
     handleChange(event) {
@@ -199,12 +220,14 @@ class Formul extends React.Component {
             <form key="formParams">
                 <div className="row">
                     <div className="col s6">
-                        <a className="waves-effect waves-light btn" name="Delete" onClick={this.handleDelete}
+                        <a className="waves-effect waves-light btn" style={this.buttonStyle} name="Delete"
+                           onClick={this.handleDelete}
                            key="Delete">Delete Shape</a>
                     </div>
                     <div className="col s6">
-                        <a className="waves-effect waves-light btn" name="DL" onClick={this.handleDownload}
-                           key="download">DL Model</a>
+                        <a className="waves-effect waves-light btn" style={this.buttonStyle} name="DL"
+                           onClick={this.handleDownload}
+                           key="download">Download model</a>
                     </div>
                 </div>
                 <div className="row">
@@ -257,6 +280,9 @@ class FormEnsemble extends React.Component {
         this.handleChange = this.handleChange.bind(this);
         this.handleList = this.handleList.bind(this);
         this.handleInfo = this.handleInfo.bind(this);
+        this.buttonStyle = {
+            width: "100%",
+        };
     }
 
     handleInfo(event) {
@@ -289,11 +315,14 @@ class FormEnsemble extends React.Component {
             <form key="formParams">
                 <div className="row">
                     <div className="col s6">
-                        <a className="waves-effect waves-light btn" name="showList" onClick={this.handleList}
+                        <a className="waves-effect waves-light btn" style={this.buttonStyle} name="showList"
+                           onClick={this.handleList}
                            key="ShowList">Return</a>
                     </div>
+
                     <div className="col s6">
-                        <a className="waves-effect waves-light btn" name="Delete" onClick={this.handleDelete}
+                        <a className="waves-effect waves-light btn" style={this.buttonStyle} name="Delete"
+                           onClick={this.handleDelete}
                            key="Delete">Delete Shape</a>
                     </div>
                 </div>
@@ -350,18 +379,21 @@ class ResultDiv extends React.Component {
         this.nbRender = this.props.nb;
         this.responseDict = this.props.dict || {};
         this.tabResponseEmpty = Array.apply(null, {length: (this.nbRender - Object.keys(this.responseDict).length)}).map(Number.call, Number);
-        this.handleShowLinearCurve = this.handleShowLinearCurve.bind(this);
+        this.handleShowLearningCurve = this.handleShowLearningCurve.bind(this);
+        this.buttonStyle = {
+            width: "100%",
+        };
     }
 
-    handleShowLinearCurve(event) {
-        let dictTemp={};
-        dictTemp[event.target.name]=this.responseDict[event.target.name];
-        axios.post('/index/linearcurve', {
+    handleShowLearningCurve(event) {
+        let dictTemp = {};
+        dictTemp[event.target.name] = this.responseDict[event.target.name];
+        axios.post('/index/learningcurve', {
             params: dictTemp,
-            responseType:'application/json',
+            responseType: 'application/json',
         })
             .then(function (response) {
-                window.renderLinearCurve(response.data);
+                window.renderLearningCurve(response.data);
             })
             .catch(function (error) {
                 console.log(error);
@@ -373,14 +405,15 @@ class ResultDiv extends React.Component {
         let result = Object.keys(this.responseDict).map(name => {
                 return (
                     <div className="row" key={"row-" + name}>
-                        <div className="col s10" key={"cols10-" + name}>
+                        <div className="col s8" key={"cols10-" + name}>
                             <div key={name}>Result for {Object.keys(this.responseDict[name])[0]}
                                 ID:{name} {this.responseDict[name][Object.keys(this.responseDict[name])[0]]['resultat']}
                             </div>
                         </div>
-                        <div className="col s2" key={"cols2-" + name}>
-                            <a className="waves-effect waves-light btn-small" name={name} onClick={this.handleShowLinearCurve}
-                               key={"btnMatrix" + name}>Show Matrix</a>
+                        <div className="col s4" key={"cols2-" + name}>
+                            <a className="waves-effect waves-light btn-small" style={this.buttonStyle} name={name}
+                               onClick={this.handleShowLearningCurve}
+                               key={"btnLearningCurve-" + name}>Show LearningCurve</a>
                         </div>
                     </div>
                 );

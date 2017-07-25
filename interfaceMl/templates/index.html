@@ -9,7 +9,7 @@
     <script src="{{ url_for('static', filename='node_modules/react-dom/dist/react-dom.js') }}"></script>
     <script src="{{ url_for('static', filename='node_modules/createjs-module/vendor_modules/EaselJS-0.8.2/lib/easeljs-0.8.2.min.js') }}"></script>
     <script src="{{ url_for('static', filename='node_modules/axios/dist/axios.js') }}"></script>
-    <script type="text/babel" src="{{ url_for('static', filename='JS/ReactComponentProject.js') }}"></script>
+    <script type="text/babel" src="{{ url_for('static', filename='JS/ReactComponent.js') }}"></script>
     <script src="{{ url_for('static', filename='JS/ShapeGenerator.js') }}"></script>
     <script src="{{ url_for('static', filename='JS/EnsembleShapeGenerator.js') }}"></script>
     <link rel="shortcut icon" href="">
@@ -77,7 +77,7 @@
     // --------------------------------- initialisation of the canvas --------------
     function init() {
         let idShape = 0;
-        // -------------------------- request Get in ajax ------------
+        // -------------------------- request Get list estimators in ajax ------------
         $.ajax({
             type: 'GET',
             url: 'index/process',
@@ -106,7 +106,7 @@
                             if (stage.children[indexShape].nameClassifier !== "ensemble Learning") {
                                 if (stage.children[indexShape].typeOfClassifier === stage.getChildByName(nameShape).typeOfClassifier) {
                                     // 2 shape yello
-                                    if (confirm('ensemble learning ?')) {
+                                    if (confirm('Do you want to create an ensemble learning ?')) {
                                         const sizeCanvas = {"width": stage.canvas.width, "height": stage.canvas.height};
                                         let ensembleShapeTemp = new EnsembleShapeGenerator(idShape.toString(), sizeCanvas, stage.getChildByName(nameShape).getDataDict(), stage.children[indexShape].getDataDict(), stage.getChildByName(nameShape).getDescriptionDict(), stage.children[indexShape].getDescriptionDict(), stage.getChildByName(nameShape).typeOfClassifier);
                                         stage.addChild(ensembleShapeTemp);
@@ -179,6 +179,7 @@
             }
             return res;
         };
+
         window.startDownload = function (idShape) {
             let dataToSend = stage.getChildByName(idShape).getDataDict();
             console.log(dataToSend);
@@ -243,9 +244,9 @@
 
     });
 
-    window.renderLinearCurve = function (response) {
+    window.renderLearningCurve = function (response) {
         if (response == false) {
-            window.open('index/linearcurve', 'Download');
+            window.open('index/learningcurve', 'Download');
         } else {
             Materialize.toast('Error in creation of the PNG', 2000, 'rounded');
         }
